@@ -1,0 +1,37 @@
+{
+    "trung": {
+        "password": "123",
+        "wins": 6,
+        "losses": 3
+    },
+    "abc": {
+        "password": "123",
+        "wins": 3,
+        "losses": 4
+    },
+    "aaa": {
+        "password": "123",
+        "wins": 1,
+        "losses": 0
+    },
+    "123": {
+        "password": "123",
+        "wins": 0,
+        "losses": 1
+    },
+    "acc": {
+        "password": "123",
+        "wins": 0,
+        "losses": 0
+    },
+    "my hanh": {
+        "password": "4d363bbb0853c53eb3da0186348d4a097b88777f55c327eda5c84e2fffae3baa",
+        "wins": 9,
+        "losses": 2
+    },
+    "hanh my": {
+        "password": "12345",
+        "wins": 0,
+        "losses": 0
+    }
+}
