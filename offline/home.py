@@ -63,8 +63,13 @@ class HomePage:
         ).pack()
 
         tk.Radiobutton(
-            root, text="Online – Client (qua Server)",
-            variable=self.mode, value="online"
+            root, text="Online – Tìm người chơi ngẫu nhiên",
+            variable=self.mode, value="online_random"
+        ).pack()
+
+        tk.Radiobutton(
+            root, text="Online – Chơi với bạn bè",
+            variable=self.mode, value="online_friends"
         ).pack()
 
         tk.Button(
@@ -113,8 +118,8 @@ class HomePage:
         mode = self.mode.get()
         self.root.withdraw()
 
-        # ===== ONLINE =====
-        if mode == "online":
+        # ===== ONLINE RANDOM MATCHING =====
+        if mode == "online_random":
             try:
                 from online.online_game import OnlineGamePage
             except ImportError:
@@ -125,7 +130,6 @@ class HomePage:
                 self.root.deiconify()
                 return
 
-            # hỏi địa chỉ server (mặc định localhost)
             server_ip = simpledialog.askstring(
                 "Địa chỉ Server",
                 "Nhập địa chỉ IP server:\n(không nhập = localhost)",
@@ -135,6 +139,35 @@ class HomePage:
 
             win = tk.Toplevel(self.root)
             OnlineGamePage(
+                win,
+                home=self.root,
+                username=self.username,
+                avatar=self.avatar_path.get(),
+                server_ip=server_ip,
+                mode="random"
+            )
+
+        # ===== ONLINE WITH FRIENDS =====
+        elif mode == "online_friends":
+            try:
+                from online.online_game import OnlineFriendsPage
+            except ImportError:
+                messagebox.showerror(
+                    "Lỗi",
+                    "Không tìm thấy module Online.\nHãy chạy server trước!"
+                )
+                self.root.deiconify()
+                return
+
+            server_ip = simpledialog.askstring(
+                "Địa chỉ Server",
+                "Nhập địa chỉ IP server:\n(không nhập = localhost)",
+            )
+            if not server_ip:
+                server_ip = "127.0.0.1"
+
+            win = tk.Toplevel(self.root)
+            OnlineFriendsPage(
                 win,
                 home=self.root,
                 username=self.username,

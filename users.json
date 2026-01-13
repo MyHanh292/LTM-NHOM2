@@ -2,36 +2,53 @@
     "trung": {
         "password": "123",
         "wins": 6,
-        "losses": 3
+        "losses": 3,
+        "friends": [
+            "abc",
+            "aaa"
+        ]
     },
     "abc": {
         "password": "123",
         "wins": 3,
-        "losses": 4
+        "losses": 4,
+        "friends": [
+            "trung",
+            "123"
+        ]
     },
     "aaa": {
         "password": "123",
         "wins": 1,
-        "losses": 0
+        "losses": 0,
+        "friends": [
+            "trung"
+        ]
     },
     "123": {
         "password": "123",
         "wins": 0,
-        "losses": 1
+        "losses": 1,
+        "friends": [
+            "abc"
+        ]
     },
     "acc": {
         "password": "123",
         "wins": 0,
-        "losses": 0
+        "losses": 0,
+        "friends": []
     },
     "my hanh": {
         "password": "4d363bbb0853c53eb3da0186348d4a097b88777f55c327eda5c84e2fffae3baa",
         "wins": 9,
-        "losses": 2
+        "losses": 6,
+        "friends": []
     },
     "hanh my": {
-        "password": "12345",
+        "password": "60a1ea44d12855acd22760dde3aca56991fbef5b0d5e6e6c7145c0c90cdb456b",
         "wins": 0,
-        "losses": 0
+        "losses": 0,
+        "friends": []
     }
 }
