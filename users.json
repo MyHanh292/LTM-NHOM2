@@ -1,0 +1,27 @@
+{
+    "trung": {
+        "password": "123",
+        "wins": 6,
+        "losses": 3
+    },
+    "abc": {
+        "password": "123",
+        "wins": 3,
+        "losses": 4
+    },
+    "aaa": {
+        "password": "123",
+        "wins": 1,
+        "losses": 0
+    },
+    "123": {
+        "password": "123",
+        "wins": 0,
+        "losses": 1
+    },
+    "acc": {
+        "password": "123",
+        "wins": 0,
+        "losses": 0
+    }
+}
