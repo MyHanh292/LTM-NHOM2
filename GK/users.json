@@ -1,0 +1,27 @@
+{
+    "player1": {
+        "password": "adf0bc81dd50ced3478451ad5ce5c8ea3734b87cd4f679c16413da5f63c2526b",
+        "wins": 0,
+        "losses": 0
+    },
+    "player2": {
+        "password": "13ee32ecef5818b6ff7e8b3e778c39ae559b42396478f115d37343f1ee915a51",
+        "wins": 0,
+        "losses": 0
+    },
+    "hanh": {
+        "password": "cdd90e6419e222012e7877376a63a1d82430ec2ece25bba8dd5ad2a07a27310d",
+        "wins": 0,
+        "losses": 0
+    },
+    "tuyet": {
+        "password": "8ff9303c4ccc167ac248bb374c79d64efe48f70b6edea3ab1689249632c5f6d6",
+        "wins": 0,
+        "losses": 0
+    },
+    "tuyet1234": {
+        "password": "5de0fdfc00e85afceb16205782f602dc3e0b5a1360c21d75aa255fcbfbbad8cd",
+        "wins": 0,
+        "losses": 0
+    }
+}
