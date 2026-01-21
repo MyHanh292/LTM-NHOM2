@@ -35,15 +35,13 @@ CORS(app)
 # Secret Key
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'secretkey')
 
-# Cấu hình MySQL (qua XAMPP)
-DB_USER = os.environ.get('DB_USER', 'root')
-DB_PASS = os.environ.get('DB_PASS', '')
-DB_HOST = os.environ.get('DB_HOST', 'localhost')
-DB_NAME = os.environ.get('DB_NAME', 'upload_file')
-app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{DB_USER}:{DB_PASS}@{DB_HOST}/{DB_NAME}'
+# Cấu hình SQLite (dễ test, không cần MySQL server)
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+DB_PATH = os.path.join(os.path.dirname(BASE_DIR), 'database', 'app.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{DB_PATH}'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Đồng bộ thư mục uploads với socket server (../storage/uploads)
-BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 app.config['UPLOAD_FOLDER'] = os.path.join(BASE_DIR, '..', 'storage', 'uploads')
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
@@ -747,5 +745,6 @@ def search_documents(current_user):
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
+        print("✅ Database initialized (SQLite)")
     print("🚀 Khởi chạy Flask (API) và SocketIO (Cầu nối) trên cổng 5000...")
-    socketio.run(app, debug=True, port=5000, allow_unsafe_werkzeug=True)
+    socketio.run(app, debug=False, port=5000, allow_unsafe_werkzeug=True)
