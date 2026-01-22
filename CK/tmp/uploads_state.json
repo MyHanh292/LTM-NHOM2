@@ -1,1 +1,16 @@
-{}
+{
+  "1769090778432_logo1.jpg": {
+    "filename": "logo1.jpg",
+    "filesize": 37212,
+    "offset": 0,
+    "status": "resumed",
+    "peer": "127.0.0.1:54404",
+    "metadata": {
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjozLCJleHAiOjE3NjkxNzcxMzR9.YrP1KW7ZfJ90RT368usEP9tObQuPHKByVwIYgyhi2c4",
+      "description": "",
+      "visibility": "public",
+      "tags": []
+    },
+    "created_at": 1769090781.886473
+  }
+}

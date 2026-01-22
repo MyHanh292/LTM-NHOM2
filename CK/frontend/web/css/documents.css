@@ -43,7 +43,7 @@
 .doc-card h3 {
   word-break: break-all;
   font-size: 18px;
-  color: #004aad;
+  color: #008aad;
 }
 
 .doc-card p.desc {
@@ -145,7 +145,7 @@
 }
 .modal-header h3 {
   margin: 0;
-  color: #004aad;
+  color: #00b3ff;
 }
 .modal-close-btn {
   background: none;
