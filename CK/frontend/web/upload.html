@@ -3,69 +3,80 @@
 <head>
   <meta charset="UTF-8">
   <title>Tải lên tài liệu | CloudVault</title>
+
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/upload.css">
 </head>
 
 <body>
-  <!-- HEADER -->
+  <!-- ================= HEADER ================= -->
   <header class="header">
     <div class="logo">
-        <img src="assets/Logo.png" alt="CloudVault Logo">
+      <img src="assets/Logo.png" alt="CloudVault Logo">
     </div>
     <div class="title">CloudVault</div>
     <div class="user-actions">
-        <button id="loginBtn" onclick="window.location.href='login.html'">Đăng nhập</button>
-        <button id="registerBtn" onclick="window.location.href='register.html'">Đăng ký</button>
-        
-        <span id="userName" class="hidden"></span>
-        <button id="logoutBtn" class="hidden">Đăng xuất</button>
+      <button id="loginBtn" onclick="window.location.href='login.html'">Đăng nhập</button>
+      <button id="registerBtn" onclick="window.location.href='register.html'">Đăng ký</button>
+      <span id="userName" class="hidden"></span>
+      <button id="logoutBtn" class="hidden">Đăng xuất</button>
     </div>
   </header>
 
-  <!-- NAV-BAR -->
+  <!-- ================= NAV ================= -->
   <nav class="nav-bar">
     <ul>
-        <li><a href="index.html">📊 Dashboard</a></li>
-        <li><a href="documents.html">📂 Tài liệu</a></li> 
-        <li><a href="recent.html">⏱️ Gần đây</a></li>
-        <li><a href="favorites.html">❤️ Yêu thích</a></li>
-        <li><a href="trash.html">🗑️ Rác</a></li>
-        <li><a href="settings.html">⚙️ Cấu hình</a></li>
+      <li><a href="index.html">📊 Dashboard</a></li>
+      <li><a href="documents.html">📂 Tài liệu</a></li>
+      <li><a href="recent.html">⏱️ Gần đây</a></li>
+      <li><a href="favorites.html">❤️ Yêu thích</a></li>
+      <li><a href="trash.html">🗑️ Rác</a></li>
+      <li><a href="settings.html">⚙️ Cấu hình</a></li>
     </ul>
-    <a href="upload.html" class="btn-new">📤 Tải lên</a>
+    <a href="upload.html" class="btn-new active">📤 Tải lên</a>
   </nav>
 
-  <!-- CONTENT -->
+  <!-- ================= MAIN ================= -->
   <main class="content">
     <section class="upload-container">
-      <h2>📤 Tải lên tài liệu mới</h2>
-      <p style="color: #666; margin-bottom: 20px;">Kéo thả hoặc chọn file để bắt đầu</p>
+      <div class="upload-header">
+        <h2>📤 Tải lên tài liệu mới</h2>
+        <p>Kéo thả hoặc chọn file để bắt đầu tải lên</p>
+      </div>
 
-      <!-- Drag & Drop zone -->
+      <!-- Drag & Drop -->
       <div id="dropZone" class="drop-zone">
-        <p style="font-size: 18px; margin-bottom: 10px;">📎 Kéo tệp vào đây</p>
-        <p style="margin: 20px 0; font-size: 16px; color: #666;">hoặc</p>
-        <button id="browseFile" class="btn-select-file">🖱️ Chọn tệp từ máy tính</button>
-        <input type="file" id="fileInput" hidden>
+        <div class="drop-content">
+          <p class="drop-title">📎 Kéo tệp vào đây</p>
+          <span class="drop-separator">hoặc</span>
+          <button id="browseFile" class="btn-select-file">🖱️ Chọn tệp từ máy</button>
+          <input type="file" id="fileInput" hidden>
+        </div>
       </div>
 
-      <!-- Metadata form -->
+      <!-- Metadata -->
       <div class="meta-section">
-        <label for="visibility">🔒 Chế độ chia sẻ:</label>
-        <select id="visibility">
-          <option value="public">🌐 Công khai</option>
-          <option value="private">🔐 Riêng tư</option>
-        </select>
+        <div class="form-group">
+          <label for="visibility">🔒 Chế độ chia sẻ</label>
+          <select id="visibility">
+            <option value="public">🌐 Công khai</option>
+            <option value="private">🔐 Riêng tư</option>
+          </select>
+        </div>
 
-        <label for="tags">🏷️ Thẻ (Tags):</label>
-        <input type="text" id="tags" placeholder="Ví dụ: Toán, Lớp 12, Thi">
+        <div class="form-group">
+          <label for="tags">🏷️ Thẻ (Tags)</label>
+          <input type="text" id="tags" placeholder="Ví dụ: Toán, Lớp 12, Thi">
+        </div>
 
-        <label for="description">💬 Mô tả:</label>
-        <textarea id="description" rows="3" placeholder="Thêm mô tả ngắn cho tài liệu của bạn..."></textarea>
+        <div class="form-group">
+          <label for="description">💬 Mô tả</label>
+          <textarea id="description" rows="3"
+            placeholder="Thêm mô tả ngắn cho tài liệu của bạn..."></textarea>
+        </div>
       </div>
 
-      <!-- Upload controls -->
+      <!-- Controls -->
       <div class="upload-controls">
         <button id="startBtn" class="btn start">▶️ Bắt đầu</button>
         <button id="pauseBtn" class="btn pause" disabled>⏸️ Tạm dừng</button>
@@ -73,19 +84,22 @@
         <button id="stopBtn" class="btn stop" disabled>⏹️ Hủy</button>
       </div>
 
-      <!-- Progress bar -->
-      <div class="progress-bar">
-        <div id="progress" class="progress"></div>
+      <!-- Progress -->
+      <div class="progress-wrapper">
+        <div class="progress-bar">
+          <div id="progress" class="progress"></div>
+        </div>
+        <p id="statusText" class="status-text"></p>
       </div>
-      <p id="statusText" class="status-text"></p>
     </section>
   </main>
 
-  <!-- FOOTER -->
+  <!-- ================= FOOTER ================= -->
   <footer class="footer">
     <p>CloudVault © 2026 | Nền tảng lưu giữ & quản lý tài liệu an toàn</p>
   </footer>
 
+  <!-- ================= SCRIPT ================= -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.js"></script>
   <script src="js/api.js"></script>
   <script src="js/upload.js"></script>
