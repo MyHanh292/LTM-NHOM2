@@ -1,0 +1,96 @@
+
+    ╔════════════════════════════════════════════════════════════════════════════════╗
+    ║                         SYSTEM ARCHITECTURE DIAGRAM                            ║
+    ╚════════════════════════════════════════════════════════════════════════════════╝
+    
+    
+                              ┌─────────────────────────────┐
+                              │     WEB BROWSER (Port 8000)  │
+                              │   HTML5/CSS3/JavaScript      │
+                              │  - Login page                 │
+                              │  - Upload interface          │
+                              │  - Document list             │
+                              │  - Search & filter           │
+                              └────────────┬──────────────────┘
+                                           │
+                                           │ HTTP/WebSocket
+                                           │
+                    ┌──────────────────────▼───────────────────────┐
+                    │    FLASK BACKEND (Port 5000)                 │
+                    │  - 23 REST API endpoints                     │
+                    │  - JWT Authentication                        │
+                    │  - Document CRUD operations                  │
+                    │  - Socket.IO bridge                          │
+                    │  - Session management                        │
+                    └──────────┬──────────────────────┬─────────────┘
+                               │                      │
+                    TCP Socket │ (Port 6000)    MySQL │ (Port 3306)
+                               │                      │
+                    ┌──────────▼────────────┐    ┌───▼────────────────┐
+                    │  SOCKET SERVER        │    │  MySQL Database    │
+                    │ (Multithreaded)       │    │                    │
+                    │ - Listen port 6000    │    │  6 Tables:         │
+                    │ - Handle uploads      │    │  - users           │
+                    │ - Chunk processing    │    │  - documents       │
+                    │ - Resume capability   │    │  - tags            │
+                    │ - Write to disk       │    │  - document_tags   │
+                    │ - Atomic operations   │    │  - user_favorites  │
+                    │                       │    │  - user_doc_views  │
+                    └──────────┬────────────┘    └────────────────────┘
+                               │
+                               │ File storage
+                               │
+                    ┌──────────▼────────────────────────┐
+                    │  FILE SYSTEM                      │
+                    │  /storage/uploads/                │
+                    │  - Uploaded documents             │
+                    │  - /tmp/uploads_state.json        │
+                    │  - Resume state persistence       │
+                    └───────────────────────────────────┘
+
+
+    ┌─────────────────────── COMPONENT LAYERS ─────────────────────────┐
+    │                                                                    │
+    │  ┌─────────────────────────────────────────────────────────────┐  │
+    │  │ PRESENTATION LAYER (Frontend)                              │  │
+    │  │ - HTML5 templates                                          │  │
+    │  │ - CSS3 styling                                             │  │
+    │  │ - JavaScript (vanilla + Socket.IO)                         │  │
+    │  └─────────────────────────────────────────────────────────────┘  │
+    │                              ▲                                     │
+    │                              │ HTTP/WebSocket                       │
+    │                              ▼                                     │
+    │  ┌─────────────────────────────────────────────────────────────┐  │
+    │  │ APPLICATION LAYER (Backend)                                │  │
+    │  │ - Flask routes & controllers                               │  │
+    │  │ - JWT authentication                                       │  │
+    │  │ - Business logic                                           │  │
+    │  │ - Socket.IO event handlers                                 │  │
+    │  │ - Logging & validation                                     │  │
+    │  └─────────────────────────────────────────────────────────────┘  │
+    │                              ▲                                     │
+    │                              │ TCP/SQL                             │
+    │                              ▼                                     │
+    │  ┌─────────────────────────────────────────────────────────────┐  │
+    │  │ DATA LAYER (Persistence)                                   │  │
+    │  │ - MySQL database (relational)                              │  │
+    │  │ - SQLAlchemy ORM                                           │  │
+    │  │ - Transaction management                                   │  │
+    │  │ - File storage (atomic write)                              │  │
+    │  └─────────────────────────────────────────────────────────────┘  │
+    │                                                                    │
+    └────────────────────────────────────────────────────────────────────┘
+
+
+    ┌─────────────────────── PROTOCOL LAYERS ─────────────────────────┐
+    │                                                                   │
+    │  Layer 7 (Application): Custom JSON protocol for Socket         │
+    │  Layer 6 (Presentation): JSON serialization, binary encoding    │
+    │  Layer 5 (Session): File transfer session management            │
+    │  Layer 4 (Transport): TCP/IP with multithreading                │
+    │  Layer 3 (Network): IP routing                                  │
+    │  Layer 2 (Link): Ethernet/WiFi frames                           │
+    │  Layer 1 (Physical): Network cable/radio waves                  │
+    │                                                                   │
+    └───────────────────────────────────────────────────────────────────┘
+    
