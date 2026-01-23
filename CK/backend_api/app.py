@@ -117,14 +117,22 @@ class Document(db.Model):
     filename = db.Column(db.String(255), nullable=False)
     file_path = db.Column(db.String(512), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    description = db.Column(db.Text, nullable=True)
+
+    description = db.Column(db.Text)
     visibility = db.Column(db.Enum('public', 'private'), default='private')
     status = db.Column(db.String(50), default='uploaded')
+
+    view_count = db.Column(db.Integer, default=0)        # 👁️ MỚI
+    favorite_count = db.Column(db.Integer, default=0)    # ⭐ MỚI
+
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
-    
-    updated_at = db.Column(db.DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
-    tags = db.relationship('Tag', secondary=document_tags, lazy='subquery',
-                           backref=db.backref('documents', lazy=True))
+    updated_at = db.Column(
+        db.DateTime,
+        default=datetime.datetime.utcnow,
+        onupdate=datetime.datetime.utcnow
+    )
+
+    _
 
 class Tag(db.Model):
     __tablename__ = 'tags'
@@ -134,23 +142,28 @@ class Tag(db.Model):
 # ==========================================================
 # 🔐 JWT DECORATOR
 # ==========================================================
-def record_view(user, document): 
-    try: 
+def record_view(user, document):
+    try:
         view = UserDocumentView.query.filter_by(
-            user_id=user.id, 
+            user_id=user.id,
             document_id=document.id
         ).first()
-        
-        if view: 
-            view.last_viewed_at = datetime.datetime.utcnow()
-        else: 
-            view = UserDocumentView(user_id=user.id, document_id=document.id)
+
+        if not view:
+            view = UserDocumentView(
+                user_id=user.id,
+                document_id=document.id
+            )
             db.session.add(view)
-         
+            document.view_count += 1   # 👁️ tăng view
+
+        view.last_viewed_at = datetime.datetime.utcnow()
         db.session.commit()
+
     except Exception as e:
         db.session.rollback()
-        print(f"Lỗi khi ghi lại lượt xem: {e}")
+        print(f"[View] ❌ Error: {e}")
+
 
 def token_required(f):
     @wraps(f)
@@ -704,26 +717,40 @@ def get_favorites(current_user):
 
 @app.route('/api/documents/<int:doc_id>/favorite', methods=['POST'])
 @token_required
+@app.route('/api/documents/<int:doc_id>/favorite', methods=['POST'])
+@token_required
 def toggle_favorite(current_user, doc_id):
-    """ MỚI: Bật/Tắt yêu thích (toggle) """
     doc = Document.query.get(doc_id)
     if not doc:
         return jsonify({'message': 'Không tìm thấy tài liệu'}), 404
 
     fav = UserFavorite.query.filter_by(
-        user_id=current_user.id, 
+        user_id=current_user.id,
         document_id=doc.id
     ).first()
-    
-    if fav: 
+
+    if fav:
         db.session.delete(fav)
-        db.session.commit()
-        return jsonify({'message': 'Đã bỏ yêu thích', 'isFavorited': False}), 200
-    else: 
-        new_fav = UserFavorite(user_id=current_user.id, document_id=doc.id)
-        db.session.add(new_fav)
-        db.session.commit()
-        return jsonify({'message': 'Đã yêu thích', 'isFavorited': True}), 201
+        doc.favorite_count = max(doc.favorite_count - 1, 0)
+        is_favorited = False
+        message = 'Đã bỏ yêu thích'
+    else:
+        db.session.add(UserFavorite(
+            user_id=current_user.id,
+            document_id=doc.id
+        ))
+        doc.favorite_count += 1
+        is_favorited = True
+        message = 'Đã thêm vào yêu thích'
+
+    db.session.commit()
+    return jsonify({
+        'message': message,
+        'isFavorited': is_favorited,
+        'favoriteCount': doc.favorite_count
+    }), 200
+
+
 @app.route('/api/documents/search', methods=['GET'])
 @token_required
 def search_documents(current_user): 
