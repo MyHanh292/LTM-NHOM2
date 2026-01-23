@@ -1,7 +1,7 @@
 // File: frontend/web/js/myfiles.js
 
 // Định nghĩa địa chỉ API Backend (từ app.py)
-const API_URL = "http://127.0.0.1:5000";
+const API_URL = `http://${window.location.hostname}:5000`;
 
 // Chạy code khi trang đã tải xong
 document.addEventListener("DOMContentLoaded", () => {
@@ -91,7 +91,7 @@ function renderFiles(files, token) {
         const favBtn = document.createElement('button');
         favBtn.className = `btn-action btn-favorite ${favClass}`;
         favBtn.type = 'button';
-        favBtn.textContent = '⭐'; // Nút Yêu thích
+        favBtn.textContent = '❤️'; // Nút Yêu thích
         favBtn.dataset.id = file.id;
         // Only show edit/delete actions if user is authenticated (token present)
         if (token) {
@@ -137,6 +137,17 @@ function addCardButtonListeners(token) {
     if (container._hasDelegatedListener) return;
 
     container.addEventListener('click', async (e) => { 
+        // Handle file opening (click on card title or anywhere on card except buttons)
+        const card = e.target.closest('.doc-card');
+        if (card && !e.target.closest('.btn-action') && !e.target.closest('.doc-card-actions')) {
+            const title = card.querySelector('h3');
+            if (title && (e.target === title || title.contains(e.target))) {
+                const filename = title.textContent;
+                openFilePreview(filename, card.dataset.id);
+                return;
+            }
+        }
+        
         const editBtn = e.target.closest('.btn-edit');
         if (editBtn) {
             showEditModal(editBtn.dataset);
@@ -149,12 +160,17 @@ function addCardButtonListeners(token) {
             
             if (confirm("Bạn có chắc chắn muốn chuyển file này vào thùng rác không?")) {
                 try { 
-                    await trashDocument(fileId); 
+                    await trashDocument(fileId);
                     
-                    alert("Đã chuyển vào thùng rác!"); 
-                    loadUserFiles(localStorage.getItem('token')); 
+                    // Xóa element ngay lập tức mà không cần reload
+                    const card = deleteBtn.closest('.doc-card');
+                    if (card) {
+                        card.style.animation = 'fadeOut 0.3s ease-out';
+                        setTimeout(() => card.remove(), 300);
+                    }
                 } catch (err) { 
                     console.error("Lỗi khi chuyển vào thùng rác:", err);
+                    alert("Lỗi: " + err.message);
                 }
             }
             return;  
@@ -281,4 +297,98 @@ function addModalListeners(token) {
 function escapeHTML(str) {
     if (str === null || str === undefined) return '';
     return String(str).replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+/**
+ * Mở file preview dựa trên loại file
+ */
+function openFilePreview(filename, fileId) {
+    const ext = filename.toLowerCase().split('.').pop();
+    const token = localStorage.getItem("token");
+    
+    // Kiểm tra loại file
+    if (!['doc', 'docx', 'ppt', 'pptx', 'txt', 'pdf', 'jpg', 'jpeg', 'png', 'gif', 'mp4', 'webm'].includes(ext)) {
+        alert('❌ Loại file này không hỗ trợ xem trước.\n\nCác loại file hỗ trợ: DOC, DOCX, PPT, PPTX, TXT, PDF, Images, Video');
+        return;
+    }
+
+    // TXT - Hiển thị trong modal
+    if (ext === 'txt') {
+        const headers = {};
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        
+        fetch(`${API_URL}/downloads/${fileId}/${filename}`, { headers })
+            .then(r => {
+                if (!r.ok) throw new Error(`HTTP ${r.status}: ${r.statusText}`);
+                return r.text();
+            })
+            .then(text => showTextPreview(filename, text))
+            .catch(err => {
+                console.error('Lỗi tải file TXT:', err);
+                alert('❌ Không thể mở file TXT.\n\nLỗi: ' + err.message);
+            });
+    }
+    // DOC/DOCX - Dùng Google Docs Viewer
+    else if (['doc', 'docx'].includes(ext)) {
+        const fileUrl = `${API_URL}/downloads/${fileId}/${filename}`;
+        const viewerUrl = `https://docs.google.com/gview?url=${encodeURIComponent(fileUrl)}&embedded=true`;
+        const newWin = window.open(viewerUrl, '_blank', 'width=1000,height=700');
+        if (!newWin) alert('⚠️ Vui lòng cho phép pop-up để xem file.');
+    }
+    // PPT/PPTX - Dùng Google Slides Viewer
+    else if (['ppt', 'pptx'].includes(ext)) {
+        const fileUrl = `${API_URL}/downloads/${fileId}/${filename}`;
+        const viewerUrl = `https://docs.google.com/gview?url=${encodeURIComponent(fileUrl)}&embedded=true`;
+        const newWin = window.open(viewerUrl, '_blank', 'width=1000,height=700');
+        if (!newWin) alert('⚠️ Vui lòng cho phép pop-up để xem file.');
+    }
+    // PDF, Images, Video - Mở trực tiếp
+    else {
+        const headers = {};
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        
+        fetch(`${API_URL}/downloads/${fileId}/${filename}`, { headers })
+            .then(r => {
+                if (!r.ok) throw new Error(`HTTP ${r.status}`);
+                return r.blob();
+            })
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const newWin = window.open(url, '_blank');
+                if (!newWin) alert('⚠️ Vui lòng cho phép pop-up để xem file.');
+            })
+            .catch(err => {
+                console.error('Lỗi tải file:', err);
+                alert('❌ Không thể mở file. Vui lòng thử lại.');
+            });
+    }
+}
+
+/**
+ * Hiển thị preview cho file TXT
+ */
+function showTextPreview(filename, content) {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.style.zIndex = '2000';
+    modal.innerHTML = `
+        <div class="modal-box" style="width: 800px; max-height: 80vh;">
+            <div class="modal-header">
+                <h3>📄 ${escapeHTML(filename)}</h3>
+                <button class="modal-close-btn" type="button">&times;</button>
+            </div>
+            <div style="padding: 24px; max-height: 60vh; overflow-y: auto; background: #fafbff; border-top: 1px solid #ddd5f0;">
+                <pre style="white-space: pre-wrap; word-wrap: break-word; color: #333; font-size: 14px; line-height: 1.8; font-family: 'Courier New', monospace; margin: 0;">${escapeHTML(content)}</pre>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    const closeBtn = modal.querySelector('.modal-close-btn');
+    closeBtn.addEventListener('click', () => modal.remove());
+    
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) modal.remove();
+    });
 }

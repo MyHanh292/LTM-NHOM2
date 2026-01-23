@@ -2,21 +2,23 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>Cài đặt | Studocu</title>
+  <title>Cấu hình | CloudVault</title>
   <link rel="stylesheet" href="css/style.css">
   
   <style>
     .settings-form {
-        background-color: #fff;
-        padding: 25px;
-        border-radius: 8px;
-        margin-bottom: 25px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    max-width: 800px;       /* Giới hạn chiều rộng để không bị quá to */
+    margin: 0 auto 25px auto; /* Căn giữa khung cài đặt */
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 12px;    /* Bo tròn đồng bộ với thanh menu */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     }
     .settings-form h3 {
-        margin-top: 0;
-        border-bottom: 1px solid #eee;
-        padding-bottom: 10px;
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #333;
     }
     .settings-form label {
         display: block;
@@ -28,11 +30,12 @@
     .settings-form input[type="email"],
     .settings-form input[type="password"] {
         width: 100%;
-        padding: 10px;
+        padding: 12px 15px;
         margin-bottom: 20px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        box-sizing: border-box; /* Fix padding issue */
+        border: 1px solid #ddd;
+        border-radius: 8px;     /* Bo tròn nhẹ cho ô nhập liệu */
+        font-size: 1rem;
+        box-sizing: border-box; /* Đảm bảo padding không làm tràn khung */
     }
     .settings-form input[type="email"][disabled] {
         background-color: #f4f4f4;
@@ -49,7 +52,14 @@
         font-weight: bold;
     }
     .settings-form .btn-save:hover {
-        background-color: #0056b3;
+        background-color: #007bff;
+        color: white;
+        padding: 12px 25px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: bold;
+        width: auto;
     }
     .settings-form .msg {
         margin-top: 15px;
@@ -63,33 +73,29 @@
 <body>
   <header class="header">
     <div class="logo">
-        <img src="assets/logo.jpg" alt="Studocu Logo">
-        <span>Studocu</span>
-    </div>
-    <div class="user-actions">
-        <button id="loginBtn" onclick="window.location.href='login.html'">Đăng nhập</button>
-        <button id="registerBtn" onclick="window.location.href='register.html'">Đăng ký</button>
-        <button id="logoutBtn" class="hidden">Đăng xuất</button>
-    </div>
+        <img src="assets/Logo.png" alt="CloudVault Logo">
+    </div>
+    <div class="title">CloudVault</div>
+    <div class="user-actions">
+        <button id="loginBtn" onclick="window.location.href='login.html'">Đăng nhập</button>
+        <button id="registerBtn" onclick="window.location.href='register.html'">Đăng ký</button>
+        
+        <span id="userName" class="hidden"></span>
 </header>
-
-  <aside class="sidebar">
-    <h3>Tài khoản</h3>
-    <a href="upload.html" class="btn-new">+ Mới</a>
-    <ul>
-        <li><a href="index.html">🏠 Trang chủ</a></li>
-        <li><a href="document.html">📁 Kho lưu trữ của tôi</a></li> 
-        <li><a href="recent.html">🕓 Nội dung gần đây</a></li>
-        <li><a href="trash.html">🗑️ Thùng rác</a></li>
-        <li><a href="favorites.html">⭐ Bộ nhớ</a></li>
-    </ul>
-    <hr>
-    <ul>
-        <li><a href="settings.html" class="active">⚙️ Cài đặt</a></li>     </ul>
-</aside>
+    <nav class="nav-bar">
+    <ul>
+        <li><a href="index.html">📊 Dashboard</a></li>
+        <li><a href="documents.html">📂 Tài liệu</a></li> 
+        <li><a href="recent.html">⏱️ Gần đây</a></li>
+        <li><a href="favorites.html">❤️ Yêu thích</a></li>
+        <li><a href="trash.html">🗑️ Rác</a></li>
+        <li><a href="settings.html" class="active">⚙️ Cấu hình</a></li>
+    </ul>
+    <a href="upload.html" class="btn-new">📤 Tải lên</a>
+</nav>
 
     <main class="content">
-    <h2>⚙️ Cài đặt tài khoản</h2>
+<h2 style="color: #667eea; font-size: 24px; font-weight: 700; margin-bottom: 10px;">⚙️ Cấu hình tài khoản</h2>
     
     <div class="settings-form">
       <h3>Thông tin cá nhân</h3>
@@ -124,7 +130,7 @@
   </main>
 
     <footer class="footer">
-    <p>Studocu Việt Nam © 2025</p>
+    <p>Kho lưu trữ của tôi © 2026</p>
   </footer>
 
     <script src="js/api.js"></script>

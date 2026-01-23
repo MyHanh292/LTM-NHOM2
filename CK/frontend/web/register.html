@@ -1,10 +1,9 @@
-<!-- Trang đăng ký: form đăng ký người dùng mới -->
 <!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Đăng ký | Studocu Việt Nam</title>
+  <title>Đăng ký | CloudVault</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/auth.css">
 </head>
@@ -13,54 +12,38 @@
   <!-- HEADER -->
   <header class="header">
     <div class="logo">
-      <img src="assets/logo.jpg" alt="Studocu Logo">
-      
+      <img src="assets/Logo.png" alt="CloudVault Logo">
     </div>
-
+    <div class="title">CloudVault</div>
     <div class="user-actions">
-  <button id="homeBtn" onclick="window.location.href='index.html'">Thoát</button>
-  <button id="loginBtn" onclick="window.location.href='login.html'">Đăng nhập</button>
-  <button id="registerBtn" onclick="window.location.href='register.html'">Đăng ký</button>
-  <img src="assets/avatar.jpg" alt="Avatar" class="avatar hidden" id="userAvatar" onclick="window.location.href='index.html'">
-</div>
-
+      <button id="homeBtn" onclick="window.location.href='index.html'">← Quay lại</button>
+      <button id="loginBtn" onclick="window.location.href='login.html'">Đăng nhập</button>
+    </div>
   </header>
 
   <!-- FORM ĐĂNG KÝ -->
   <main class="auth-container">
     <div class="auth-box">
-      <h2>🔐 Tạo tài khoản mới</h2>
+      <h2>🎉 Tham gia CloudVault</h2>
+      <p class="auth-subtitle">Tạo tài khoản để bắt đầu lưu giữ tài liệu</p>
       <form id="registerForm" autocomplete="off">
-        <input type="text" id="name" placeholder="Họ và tên" required>
-        <input type="email" id="email" placeholder="Email" required>
-        <input type="password" id="password" placeholder="Mật khẩu" minlength="6" required>
-        <input type="password" id="confirmPassword" placeholder="Nhập lại mật khẩu" required>
-
-        <button type="submit" class="btn-primary" id="registerSubmit">Đăng ký</button>
+        <input type="text" id="name" placeholder="👤 Họ và tên" required>
+        <input type="email" id="email" placeholder="📧 Email" required>
+        <input type="password" id="password" placeholder="🔑 Mật khẩu" minlength="6" required>
+        <input type="password" id="confirmPassword" placeholder="🔑 Nhập lại mật khẩu" required>
+        <button type="submit" class="btn-primary" id="registerSubmit">✨ Đăng ký</button>
         <p class="msg" id="registerMsg"></p>
       </form>
 
-      <p class="switch">
-        Đã có tài khoản?
-        <a href="login.html">Đăng nhập ngay</a>
-      </p>
+      <div class="auth-footer">
+        <p>Đã có tài khoản? <a href="login.html">Đăng nhập ngay</a></p>
+      </div>
     </div>
   </main>
 
   <!-- FOOTER -->
   <footer class="footer">
-    <div class="footer-links" style="text-align:center;">
-      <a href="#">Giới thiệu</a> |
-      <a href="#">Liên hệ</a> |
-      <a href="#">Điều khoản</a> |
-      <a href="#">Chính sách bảo mật</a>
-    </div>
-
-    <div class="footer-info">
-      <p>Studocu không liên kết hoặc được xác nhận bởi bất kỳ trường học, cao đẳng hoặc đại học nào.</p>
-      <p>Copyright © 2025 StudeerSnel B.V., Keizersgracht 424-sous, 1016 GC Amsterdam</p>
-      <p>KVK: 56829787, BTW: NL852321363B01</p>
-    </div>
+    <p>CloudVault © 2026 | Nền tảng lưu giữ & quản lý tài liệu an toàn</p>
   </footer>
 
   <!-- POPUP LOADING -->
@@ -78,8 +61,7 @@
     const popupText = document.getElementById("popupText");
     const msg = document.getElementById("registerMsg");
     
-    // ĐỊA CHỈ API BACKEND
-    const API_URL = "http://127.0.0.1:5000";
+    const API_URL = `http://${window.location.hostname}:5000`;
 
     form.addEventListener("submit", (e) => {
       e.preventDefault();
@@ -105,7 +87,6 @@
       popupText.textContent = "Đang xử lý...";
       msg.textContent = "";
 
-      // GỌI API ĐĂNG KÝ
       fetch(`${API_URL}/api/register`, {
         method: "POST",
         headers: {
@@ -119,18 +100,17 @@
       })
       .then(response => response.json().then(data => ({ status: response.status, body: data })))
       .then(res => {
-        if (res.status === 201) { // 201 Created
+        if (res.status === 201) {
           popupText.textContent = "✅ Đăng ký thành công!";
           msg.textContent = res.body.message;
           msg.style.color = "green";
 
           setTimeout(() => {
             popup.classList.add("hidden");
-            window.location.href = "login.html"; // Chuyển sang trang đăng nhập
+            window.location.href = "login.html";
           }, 1500);
         } else {
-          // Xử lý lỗi (vd: 409 Conflict, 400 Bad Request)
-          popupText.textContent = "❌ Đăng ký thất bại!";
+          popupText.textContent = "❌ Đăng ký thất bại";
           msg.textContent = `Lỗi: ${res.body.message}`;
           msg.style.color = "red";
           setTimeout(() => {
@@ -140,7 +120,7 @@
       })
       .catch(error => {
         console.error("Lỗi:", error);
-        popupText.textContent = "❌ Lỗi kết nối!";
+        popupText.textContent = "❌ Lỗi kết nối";
         msg.textContent = "Không thể kết nối tới server.";
         msg.style.color = "red";
         setTimeout(() => popup.classList.add("hidden"), 2000);

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Trang chủ | Studocu Việt Nam</title>
+  <title>CloudVault - Lưu Giữ & Quản Lý Tài Liệu</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 
@@ -11,86 +11,83 @@
   <!-- HEADER -->
   <header class="header">
     <div class="logo">
-        <img src="assets/logo.jpg" alt="Studocu Logo">
-        <span>Studocu</span>
+        <img src="assets/Logo.png" alt="CloudVault Logo">
     </div>
+    <div class="title">CloudVault</div>
     <div class="user-actions">
         <button id="loginBtn" onclick="window.location.href='login.html'">Đăng nhập</button>
         <button id="registerBtn" onclick="window.location.href='register.html'">Đăng ký</button>
         
+        <span id="userName" class="hidden"></span>
         <button id="logoutBtn" class="hidden">Đăng xuất</button>
     </div>
 </header>
 
-  <!-- SIDEBAR -->
-  <aside class="sidebar">
-    <h3>Tài khoản</h3>
-    <a href="upload.html" class="btn-new">+ Mới</a>
+  <!-- NAV-BAR -->
+  <nav class="nav-bar">
     <ul>
-        <li><a href="index.html">🏠 Trang chủ</a></li>
-        <li><a href="documents.html">📁 Kho lưu trữ của tôi</a></li> 
-        <li><a href="recent.html">🕓 Nội dung gần đây</a></li>
-        <li><a href="trash.html">🗑️ Thùng rác</a></li>
-        <li><a href="favorites.html">⭐ Bộ nhớ</a></li>
+        <li><a href="index.html" class="active">📊 Dashboard</a></li>
+        <li><a href="documents.html">📂 Tài liệu</a></li> 
+        <li><a href="recent.html">⏱️ Gần đây</a></li>
+        <li><a href="favorites.html">❤️ Yêu thích</a></li>
+        <li><a href="trash.html">🗑️ Rác</a></li>
+        <li><a href="settings.html">⚙️ Cấu hình</a></li>
     </ul>
-    <hr>
-    <ul>
-        <li><a href="settings.html">⚙️ Cài đặt</a></li>
-    </ul>
-</aside>
+    <a href="upload.html" class="btn-new">📤 Tải lên</a>
+</nav>
 
   <!-- MAIN CONTENT -->
   <main class="content">
     <!-- THANH TÌM KIẾM -->
     <section class="search-section">
-      <h2>Tìm kiếm tài liệu</h2>
       <div class="search-box">
-        <input type="text" id="searchInput" placeholder="Nhập tên tài liệu hoặc từ khóa...">
+        <input type="text" id="searchInput" placeholder="🔍 Tìm tài liệu của bạn...">
         <button id="searchBtn">Tìm kiếm</button>
       </div>
     </section>
 
+    <!-- TIÊU ĐỀ PHẦN -->
+    <div style="margin: 40px 0 20px 0;">
+      <h2 style="color: #2d9b7d; font-size: 20px; font-weight: 700; margin: 0;">📈 Nội dung nổi bật</h2>
+    </div>
+    
     <!-- NỘI DUNG VỪA TẢI -->
     <section class="recent-upload">
-      <h2>Nội dung vừa tải lên</h2>
       <div class="doc-grid" id="recent-upload-grid">
-          <p>Đang tải...</p> 
+          <p>Chưa có tài liệu...</p> 
       </div>
-  </section>
+    </section>
 
     <!-- NỘI DUNG VỪA XEM -->
     <section class="recent-view">
-      <h2>Nội dung vừa xem</h2>
       <div class="doc-grid" id="recent-view-grid">
+          <p>Chưa có tài liệu...</p>
+      </div>
+    </section>
+
+    <!-- DOCUMENT PUBLIC -->
+    <div style="margin: 40px 0 20px 0;">
+      <h2 style="color: #2d9b7d; font-size: 20px; font-weight: 700; margin: 0;">🌐 Khám phá</h2>
+    </div>
+    <section class="public-docs-section">
+      <div class="doc-grid" id="public-docs-grid">
           <p>Đang tải...</p>
       </div>
-  </section>
-
-  <!-- DOCUMENT PUBLIC -->
-  <section class="public-docs-section">
-    <h2>Tài liệu public</h2>
-    <div class="doc-grid" id="public-docs-grid">
-        <p>Đang tải tài liệu public...</p>
-    </div>
-  </section>
+    </section>
 
   </main>
 
   <!-- FOOTER -->
   <footer class="footer">
-    <div class="footer-links" style="text-align:center;">
-      <a href="#">Giới thiệu</a> |
-      <a href="#">Liên hệ</a> |
-      <a href="#">Điều khoản</a> |
-      <a href="#">Chính sách bảo mật</a>
-    </div>
-
-    <div class="footer-info">
-      <p>Studocu không liên kết hoặc được xác nhận bởi bất kỳ trường học, cao đẳng hoặc đại học nào.</p>
-      <p>Copyright © 2025 StudeerSnel B.V., Keizersgracht 424-sous, 1016 GC Amsterdam</p>
-      <p>KVK: 56829787, BTW: NL852321363B01</p>
+    <p>CloudVault © 2026 | Nền tảng lưu giữ & quản lý tài liệu an toàn</p>
+    <div class="footer-links" style="margin-top: 12px;">
+      <a href="#">Về chúng tôi</a> • 
+      <a href="#">Liên hệ</a> • 
+      <a href="#">Chính sách</a> • 
+      <a href="#">Bảo mật</a>
     </div>
   </footer>
+
   <script src="js/api.js"></script>  
   <script src="js/main.js"></script>
 </body>

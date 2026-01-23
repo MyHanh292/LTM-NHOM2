@@ -1,9 +1,8 @@
-<!-- Trang upload: drag & drop, Start/Pause/Resume/Stop upload -->
 <!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>Upload tài liệu | Studocu Việt Nam</title>
+  <title>Tải lên tài liệu | CloudVault</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/upload.css">
 </head>
@@ -12,65 +11,66 @@
   <!-- HEADER -->
   <header class="header">
     <div class="logo">
-        <img src="assets/logo.jpg" alt="Studocu Logo">
-        <span>Studocu</span>
+        <img src="assets/Logo.png" alt="CloudVault Logo">
     </div>
+    <div class="title">CloudVault</div>
     <div class="user-actions">
         <button id="loginBtn" onclick="window.location.href='login.html'">Đăng nhập</button>
         <button id="registerBtn" onclick="window.location.href='register.html'">Đăng ký</button>
         
+        <span id="userName" class="hidden"></span>
         <button id="logoutBtn" class="hidden">Đăng xuất</button>
     </div>
-</header>
+  </header>
 
-  <!-- SIDEBAR -->
-  <aside class="sidebar">
-    <h3>Tài khoản</h3>
-    <a href="upload.html" class="btn-new">+ Mới</a>
+  <!-- NAV-BAR -->
+  <nav class="nav-bar">
     <ul>
-        <li><a href="index.html">🏠 Trang chủ</a></li>
-        <li><a href="documents.html">📁 Kho lưu trữ của tôi</a></li> <li><a href="recent.html">🕓 Nội dung gần đây</a></li>
-        <li><a href="trash.html">🗑️ Thùng rác</a></li>
-        <li><a href="favorites.html">⭐ Bộ nhớ</a></li>
+        <li><a href="index.html">📊 Dashboard</a></li>
+        <li><a href="documents.html">📂 Tài liệu</a></li> 
+        <li><a href="recent.html">⏱️ Gần đây</a></li>
+        <li><a href="favorites.html">❤️ Yêu thích</a></li>
+        <li><a href="trash.html">🗑️ Rác</a></li>
+        <li><a href="settings.html">⚙️ Cấu hình</a></li>
     </ul>
-    <hr>
-    <ul>
-        <li><a href="settings.html">⚙️ Cài đặt</a></li>
-    </ul>
-</aside>
+    <a href="upload.html" class="btn-new">📤 Tải lên</a>
+  </nav>
 
   <!-- CONTENT -->
   <main class="content">
     <section class="upload-container">
-      <h2>📤 Upload tài liệu của bạn</h2>
+      <h2>📤 Tải lên tài liệu mới</h2>
+      <p style="color: #666; margin-bottom: 20px;">Kéo thả hoặc chọn file để bắt đầu</p>
 
       <!-- Drag & Drop zone -->
       <div id="dropZone" class="drop-zone">
-        <p>Kéo thả tệp vào đây hoặc <span id="browseFile" class="browse">chọn tệp</span></p>
+        <p style="font-size: 18px; margin-bottom: 10px;">📎 Kéo tệp vào đây</p>
+        <p style="margin: 20px 0; font-size: 16px; color: #666;">hoặc</p>
+        <button id="browseFile" class="btn-select-file">🖱️ Chọn tệp từ máy tính</button>
         <input type="file" id="fileInput" hidden>
       </div>
 
       <!-- Metadata form -->
       <div class="meta-section">
-        <label for="visibility">Chế độ hiển thị:</label>
+        <label for="visibility">🔒 Chế độ chia sẻ:</label>
         <select id="visibility">
-          <option value="public">Công khai</option>
-          <option value="private">Riêng tư</option>
+          <option value="public">🌐 Công khai</option>
+          <option value="private">🔐 Riêng tư</option>
         </select>
 
-        <label for="tags">Thẻ (tag):</label>
-        <input type="text" id="tags" placeholder="Nhập thẻ, cách nhau bằng dấu phẩy">
+        <label for="tags">🏷️ Thẻ (Tags):</label>
+        <input type="text" id="tags" placeholder="Ví dụ: Toán, Lớp 12, Thi">
 
-        <label for="description">Mô tả:</label>
-        <textarea id="description" rows="3" placeholder="Thêm mô tả ngắn cho tài liệu..."></textarea>
+        <label for="description">💬 Mô tả:</label>
+        <textarea id="description" rows="3" placeholder="Thêm mô tả ngắn cho tài liệu của bạn..."></textarea>
       </div>
 
       <!-- Upload controls -->
       <div class="upload-controls">
-        <button id="startBtn" class="btn start">Bắt đầu</button>
-        <button id="pauseBtn" class="btn pause" disabled>Tạm dừng</button>
-        <button id="resumeBtn" class="btn resume" disabled>Tiếp tục</button>
-        <button id="stopBtn" class="btn stop" disabled>Dừng</button>
+        <button id="startBtn" class="btn start">▶️ Bắt đầu</button>
+        <button id="pauseBtn" class="btn pause" disabled>⏸️ Tạm dừng</button>
+        <button id="resumeBtn" class="btn resume" disabled>▶️ Tiếp tục</button>
+        <button id="stopBtn" class="btn stop" disabled>⏹️ Hủy</button>
       </div>
 
       <!-- Progress bar -->
@@ -83,14 +83,12 @@
 
   <!-- FOOTER -->
   <footer class="footer">
-    <p>Studocu không liên kết hoặc được xác nhận bởi bất kỳ trường học, cao đẳng hoặc đại học nào.</p>
-    <p>Copyright © 2025 StudeerSnel B.V., Keizersgracht 424-sous, 1016 GC Amsterdam</p>
-    <p>KVK: 56829787, BTW: NL852321363B01</p>
+    <p>CloudVault © 2026 | Nền tảng lưu giữ & quản lý tài liệu an toàn</p>
   </footer>
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.js"></script>
   <script src="js/api.js"></script>
   <script src="js/upload.js"></script>
   <script src="js/main.js"></script>
-  
 </body>
 </html>

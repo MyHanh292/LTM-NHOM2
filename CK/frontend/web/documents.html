@@ -1,80 +1,75 @@
 <!DOCTYPE html>
-
 <html lang="vi">
-
 <head> 
   <meta charset="UTF-8" /> 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" /> 
-  <title>Kho lưu trữ | Studocu Việt Nam</title> 
+  <title>Tài liệu | CloudVault</title> 
   <link rel="stylesheet" href="css/style.css"> 
   <link rel="stylesheet" href="css/documents.css" />
   <style>
     .btn-favorite {
-        opacity: 0.5;  
-        transition: opacity 0.2s;
+        opacity: 0.6;  
+        transition: all 0.2s ease;
+        cursor: pointer;
     }
     .btn-favorite.favorited,
     .btn-favorite:hover {
-        opacity: 1.0;  
+        opacity: 1.0;
+        transform: scale(1.1);
     }
-</style>
+  </style>
 </head>
 <body>
 
   <header class="header">
     <div class="logo">
-        <img src="assets/logo.jpg" alt="Studocu Logo">
-        <span>Studocu</span>
+        <img src="assets/Logo.png" alt="CloudVault Logo">
     </div>
+    <div class="title">CloudVault</div>
     <div class="user-actions">
         <button id="loginBtn" onclick="window.location.href='login.html'">Đăng nhập</button>
         <button id="registerBtn" onclick="window.location.href='register.html'">Đăng ký</button>
         
+        <span id="userName" class="hidden"></span>
         <button id="logoutBtn" class="hidden">Đăng xuất</button>
     </div>
-</header>
+  </header>
 
-<aside class="sidebar">
-    <h3>Tài khoản</h3>
-    <a href="upload.html" class="btn-new">+ Mới</a>
+  <nav class="nav-bar">
     <ul>
-        <li><a href="index.html">🏠 Trang chủ</a></li>
-        <li><a href="documents.html">📁 Kho lưu trữ của tôi</a></li> <li><a href="recent.html">🕓 Nội dung gần đây</a></li>
-        <li><a href="trash.html">🗑️ Thùng rác</a></li>
-        <li><a href="favorites.html">⭐ Bộ nhớ</a></li>
+        <li><a href="index.html">📊 Dashboard</a></li>
+        <li><a href="documents.html" class="active">📂 Tài liệu</a></li> 
+        <li><a href="recent.html">⏱️ Gần đây</a></li>
+        <li><a href="favorites.html">❤️ Yêu thích</a></li>
+        <li><a href="trash.html">🗑️ Rác</a></li>
+        <li><a href="settings.html">⚙️ Cấu hình</a></li>
     </ul>
-    <hr>
-    <ul>
-        <li><a href="settings.html">⚙️ Cài đặt</a></li>
-    </ul>
-</aside>
+    <a href="upload.html" class="btn-new">📤 Tải lên</a>
+  </nav>
+
   <main class="content">
     <section class="my-files-section">
-      <h2>📁 Kho lưu trữ của tôi</h2>
-      <p>Quản lý tất cả tài liệu bạn đã tải lên.</p>
+      <h2 style="color: #667eea; font-size: 24px; font-weight: 700; margin-bottom: 10px;">📂 Tài liệu của tôi</h2>
+      <p style="color: #666; margin-bottom: 25px;">Quản lý và tổ chức tất cả tài liệu của bạn</p>
       <div class="doc-grid" id="file-list-container">
-        <p id="loading-text">Đang tải tài liệu của bạn...</p>
+        <p id="loading-text">⏳ Đang tải tài liệu...</p>
       </div>
     </section>
   </main>
+
   <footer class="footer">
-    <div class="footer-links" style="text-align:center;">
-      <a href="#">Giới thiệu</a> | <a href="#">Liên hệ</a> | <a href="#">Điều khoản</a> | <a href="#">Chính sách bảo mật</a>
-    </div>
-    <div class="footer-info">
-      <p>Studocu không liên kết hoặc được xác nhận bởi bất kỳ trường học, cao đẳng hoặc đại học nào.</p>
-      <p>Copyright © 2025 StudeerSnel B.V., Keizersgracht 424-sous, 1016 GC Amsterdam</p>
-    </div>
+    <p>CloudVault © 2026 | Nền tảng lưu giữ & quản lý tài liệu an toàn</p>
   </footer>
+
   <div id="edit-modal-overlay" class="modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="edit-modal-title">
     <div class="modal-box">
       <div class="modal-header">
-        <h3 id="edit-modal-title">Chỉnh sửa thông tin tài liệu</h3>
+        <h3 id="edit-modal-title">✏️ Chỉnh sửa tài liệu</h3>
         <button id="modal-close-btn" class="modal-close-btn" type="button">&times;</button>
       </div>
       <form id="edit-form" class="modal-body">
         <input type="hidden" id="edit-id" value="">
-        <label for="edit-filename">Tên file:</label>
+        <label for="edit-filename">Tên tệp:</label>
         <input type="text" id="edit-filename" disabled>
         <label for="edit-description">Mô tả:</label>
         <textarea id="edit-description" rows="4"></textarea>

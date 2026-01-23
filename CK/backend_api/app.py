@@ -391,6 +391,29 @@ def download(current_user, doc_id):
     filename = os.path.basename(doc.file_path)
     return send_from_directory(directory, filename, as_attachment=True)
 
+@app.route('/api/downloads/<int:doc_id>/<filename>', methods=['GET'])
+@token_required
+def preview_file(current_user, doc_id, filename):
+    """ Mở file preview (không download, dùng cho xem file trong browser) """
+    doc = Document.query.get(doc_id)
+    if not doc:
+        return jsonify({'message': 'Không tìm thấy tài liệu'}), 404
+    if doc.user_id != current_user.id and doc.visibility == 'private':
+        return jsonify({'message': 'Không có quyền truy cập'}), 403
+    
+    record_view(current_user, doc)
+    directory = os.path.join(app.config['UPLOAD_FOLDER'], os.path.dirname(doc.file_path))
+    actual_filename = os.path.basename(doc.file_path)
+    
+    # Xác minh filename khớp (bảo mật)
+    if not filename.endswith(actual_filename.split('.')[-1]):
+        return jsonify({'message': 'File không hợp lệ'}), 400
+    
+    try:
+        return send_from_directory(directory, actual_filename, as_attachment=False)
+    except:
+        return jsonify({'message': 'Không thể đọc file'}), 500
+
 @app.route('/api/documents/<int:doc_id>/trash', methods=['POST'])
 @token_required
 def trash_document(current_user, doc_id):

@@ -1,7 +1,7 @@
 // ======================
 // Script chung: menu, sidebar, navigation
 // ======================
-window.API_URL = "http://127.0.0.1:5000";
+window.API_URL = `http://${window.location.hostname}:5000`;
 // Hàm này phải được gọi bởi TẤT CẢ các trang (trừ login/register)
 // Nó dựa vào file api.js (phải được tải trước)
 function setupGlobalUI() {
@@ -118,7 +118,7 @@ window.addEventListener("DOMContentLoaded", () => {
                         <p>Tags: ${tagsString}</p>
                         <p><small>Người đăng: ${doc.owner_name}</small></p>
                         <div class="doc-card-actions">
-                            <button class="btn-action btn-favorite ${doc.is_favorited ? 'favorited' : ''}" data-id="${doc.id}">⭐ Bộ nhớ</button>
+                            <button class="btn-action btn-favorite ${doc.is_favorited ? 'favorited' : ''}" data-id="${doc.id}">❤️ Yêu thích</button>
                         </div>
                     `;
                     container.appendChild(docCard);
@@ -344,7 +344,7 @@ async function loadPublicDocuments() {
                     <p>${doc.description || '<i>Chưa có mô tả</i>'}</p>
                     <p>Tags: ${tagsString || '<i>Không có thẻ</i>'}</p>
                     <div class="doc-card-actions">
-                        <button class="btn-action btn-favorite ${doc.is_favorited ? 'favorited' : ''}" data-id="${doc.id}">⭐ Bộ nhớ</button>
+                        <button class="btn-action btn-favorite ${doc.is_favorited ? 'favorited' : ''}" data-id="${doc.id}">❤️ Yêu thích</button>
                     </div>
                 `;
 
