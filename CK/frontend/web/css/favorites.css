@@ -1,0 +1,57 @@
+.favorites-section {
+  background: #ffffff;
+  padding: 24px 28px;
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(122, 111, 163, 0.08);
+}
+
+.section-header {
+  margin-bottom: 24px;
+}
+
+.section-header h2 {
+  color: #7a6fa3;
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.section-header p {
+  color: #8a7fa3;
+  font-size: 14px;
+}
+
+/* ===== trạng thái ===== */
+.status {
+  grid-column: 1 / -1;
+  padding: 30px;
+  border-radius: 12px;
+  text-align: center;
+  font-size: 15px;
+}
+
+.status.loading {
+  color: #7a6fa3;
+  background: #f5f3ff;
+}
+
+.status.warning {
+  background: #fff7e6;
+  color: #a67c00;
+}
+
+.status.empty {
+  background: #f7f7fb;
+  color: #777;
+}
+
+.status.error {
+  background: #ffecec;
+  color: #c0392b;
+}
+
+.status a {
+  color: #6c63ff;
+  font-weight: 600;
+  text-decoration: none;
+}
