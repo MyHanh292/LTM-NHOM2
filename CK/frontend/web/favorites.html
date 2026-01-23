@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Yêu thích | CloudVault</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/documents.css">
+</head>
+<body>
+    <header class="header">
+    <div class="logo">
+        <img src="assets/Logo.png" alt="CloudVault Logo">
+    </div>
+    <div class="title">CloudVault</div>
+    <div class="user-actions">
+        <button id="loginBtn" onclick="window.location.href='login.html'">Đăng nhập</button>
+        <button id="registerBtn" onclick="window.location.href='register.html'">Đăng ký</button>
+        <span id="userName" class="hidden"></span>
+        <button id="logoutBtn" class="hidden">Đăng xuất</button>
+    </div>
+</header>
+
+    <nav class="nav-bar">
+    <ul>
+        <li><a href="index.html">📊 Dashboard</a></li>
+        <li><a href="documents.html">📂 Tài liệu</a></li> 
+        <li><a href="recent.html">⏱️ Gần đây</a></li>
+        <li><a href="favorites.html" class="active">❤️ Yêu thích</a></li>
+        <li><a href="trash.html">🗑️ Rác</a></li>
+        <li><a href="settings.html">⚙️ Cấu hình</a></li>
+    </ul>
+    <a href="upload.html" class="btn-new">📤 Tải lên</a>
+</nav>
+
+    <main class="content">
+    <section class="my-files-section">
+      <h2 style="color: #7a6fa3; font-size: 24px; font-weight: 700; margin-bottom: 10px;">❤️ Tài liệu yêu thích</h2>
+      <p style="color: #8a7fa3; margin-bottom: 25px;">Các tài liệu bạn đã đánh dấu</p>
+      
+        <div class="doc-grid" id="favorites-container">
+        <p>⏳ Đang tải danh sách yêu thích...</p>
+    </div>
+    </section>
+
+  </main>
+
+    <footer class="footer">
+    <p>CloudVault © 2026 | Nền tảng lưu giữ & quản lý tài liệu an toàn</p>
+  </footer>
+
+    <script src="js/api.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/documents.js"></script>
+
+<script> 
+        const container = document.getElementById("favorites-container");
+        const token = localStorage.getItem("token");
+
+        if (!token) {
+            container.innerHTML = '<p>📌 <a href="login.html">Đăng nhập</a> để xem danh sách yêu thích.</p>'; 
+        } else {  
+            getFavoriteDocuments(token)
+                .then(data => {
+                    if (data.documents && data.documents.length > 0) {
+                        container.innerHTML = "";
+                        renderFiles(data.documents, token);
+                    } else {
+                        container.innerHTML = "<p>💔 Bạn chưa yêu thích tài liệu nào.</p>";
+                    }
+                })
+                .catch(error => {
+                    console.error("Lỗi tải yêu thích:", error);
+                    container.innerHTML = "<p>❌ Không thể tải danh sách yêu thích. Vui lòng thử lại.</p>";
+                });
+        
+        } 
+  </script>
+
+</body>
+</html>
