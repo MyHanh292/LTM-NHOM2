@@ -1,7 +1,18 @@
 // File: frontend/web/js/myfiles.js
 
 // Định nghĩa địa chỉ API Backend (từ app.py)
-const API_URL = `http://${window.location.hostname}:5000`;
+const API_URL = "http://127.0.0.1:5000";
+
+function formatDate(dateStr) {
+    if (!dateStr) return 'N/A';
+    try {
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return 'N/A';
+        return date.toLocaleDateString('vi-VN', { year: 'numeric', month: '2-digit', day: '2-digit' });
+    } catch (e) {
+        return 'N/A';
+    }
+}
 
 // Chạy code khi trang đã tải xong
 document.addEventListener("DOMContentLoaded", () => {
@@ -21,20 +32,17 @@ async function loadUserFiles(token) {
     const loadingText = document.getElementById("loading-text");
 
     try {
-        // Nếu có token, yêu cầu tài liệu của user (user=true) để hiển thị cả tài liệu của họ và public
-        // Nếu không có token, gọi endpoint chung để nhận các tài liệu public
-        const url = token ? `${API_URL}/api/documents?user=true` : `${API_URL}/api/documents`;
+        // CHỈ tải tài liệu của user (user=true)
         const headers = {};
         if (token) headers['Authorization'] = `Bearer ${token}`;
 
-        const response = await fetch(url, { method: 'GET', headers });
+        const response = await fetch(`${API_URL}/api/documents?user=true`, { method: 'GET', headers });
 
         if (response.status === 401) {
-            // Nếu token hết hạn hoặc không hợp lệ, xóa token và thử lại để lấy public docs
             if (token) {
-                localStorage.removeItem('jwtToken');
-                // Tải lại danh sách không cần token
-                return loadUserFiles(null);
+                localStorage.removeItem('token');
+                loadingText.textContent = "Vui lòng đăng nhập để xem tài liệu của bạn.";
+                return;
             }
         }
 
@@ -63,12 +71,10 @@ function renderFiles(files, token) {
 
     files.forEach(file => {
         const fileCard = document.createElement("div");
-        fileCard.className = "doc-card"; // Tận dụng style có sẵn từ style.css
+        fileCard.className = "doc-card";
         fileCard.dataset.id = file.id;
-        // Chuyển mảng tags thành chuỗi (guard nếu tags undefined)
         const tagsString = (file.tags || []).join(', ');
 
-        // Nội dung hiển thị (an toàn)
         const title = document.createElement('h3');
         title.textContent = file.filename || '';
 
@@ -84,45 +90,38 @@ function renderFiles(files, token) {
         infoRow2.className = 'info-row';
         infoRow2.innerHTML = `<strong>Tags:</strong> <span>${tagsString || '<i>Không có thẻ</i>'}</span>`;
 
+        const infoRow3 = document.createElement('div');
+        infoRow3.className = 'info-row';
+        infoRow3.innerHTML = `<strong>Ngày tải:</strong> <span>${formatDate(file.created_at)}</span>`;
+
         const actions = document.createElement('div');
         actions.className = 'doc-card-actions';
 
-        const favClass = file.is_favorited ? 'favorited' : '';
-        const favBtn = document.createElement('button');
-        favBtn.className = `btn-action btn-favorite ${favClass}`;
-        favBtn.type = 'button';
-        favBtn.textContent = '❤️'; // Nút Yêu thích
-        favBtn.dataset.id = file.id;
-        // Only show edit/delete actions if user is authenticated (token present)
-        if (token) {
-            // Create Edit button and set dataset safely
-            const editBtn = document.createElement('button');
-            editBtn.className = 'btn-action btn-edit';
-            editBtn.type = 'button';
-            editBtn.textContent = '✏️ Sửa';
-            editBtn.dataset.id = file.id;
-            editBtn.dataset.filename = file.filename || '';
-            editBtn.dataset.description = file.description || '';
-            editBtn.dataset.visibility = file.visibility || '';
-            editBtn.dataset.tags = tagsString;
+        // CHỈ hiển thị Edit/Delete (MyFiles chỉ hiện tài liệu của user)
+        const editBtn = document.createElement('button');
+        editBtn.className = 'btn-action btn-edit';
+        editBtn.type = 'button';
+        editBtn.textContent = '✏️ Sửa';
+        editBtn.dataset.id = file.id;
+        editBtn.dataset.filename = file.filename || '';
+        editBtn.dataset.description = file.description || '';
+        editBtn.dataset.visibility = file.visibility || '';
+        editBtn.dataset.tags = tagsString;
 
-            // Create Delete button
-            const deleteBtn = document.createElement('button');
-            deleteBtn.className = 'btn-action btn-delete';
-            deleteBtn.type = 'button';
-            deleteBtn.textContent = '🗑️ Xóa';
-            deleteBtn.dataset.id = file.id;
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'btn-action btn-delete';
+        deleteBtn.type = 'button';
+        deleteBtn.textContent = '🗑️ Xóa';
+        deleteBtn.dataset.id = file.id;
 
-            actions.appendChild(favBtn);
-            actions.appendChild(editBtn);
-            actions.appendChild(deleteBtn);
-        }
+        actions.appendChild(editBtn);
+        actions.appendChild(deleteBtn);
 
-        // Append all pieces to card
         fileCard.appendChild(title);
         fileCard.appendChild(desc);
         fileCard.appendChild(infoRow1);
         fileCard.appendChild(infoRow2);
+        fileCard.appendChild(infoRow3);
         fileCard.appendChild(actions);
 
         container.appendChild(fileCard);
@@ -137,17 +136,6 @@ function addCardButtonListeners(token) {
     if (container._hasDelegatedListener) return;
 
     container.addEventListener('click', async (e) => { 
-        // Handle file opening (click on card title or anywhere on card except buttons)
-        const card = e.target.closest('.doc-card');
-        if (card && !e.target.closest('.btn-action') && !e.target.closest('.doc-card-actions')) {
-            const title = card.querySelector('h3');
-            if (title && (e.target === title || title.contains(e.target))) {
-                const filename = title.textContent;
-                openFilePreview(filename, card.dataset.id);
-                return;
-            }
-        }
-        
         const editBtn = e.target.closest('.btn-edit');
         if (editBtn) {
             showEditModal(editBtn.dataset);
@@ -160,45 +148,15 @@ function addCardButtonListeners(token) {
             
             if (confirm("Bạn có chắc chắn muốn chuyển file này vào thùng rác không?")) {
                 try { 
-                    await trashDocument(fileId);
+                    await trashDocument(fileId); 
                     
-                    // Xóa element ngay lập tức mà không cần reload
-                    const card = deleteBtn.closest('.doc-card');
-                    if (card) {
-                        card.style.animation = 'fadeOut 0.3s ease-out';
-                        setTimeout(() => card.remove(), 300);
-                    }
+                    alert("Đã chuyển vào thùng rác!"); 
+                    loadUserFiles(localStorage.getItem('token')); 
                 } catch (err) { 
                     console.error("Lỗi khi chuyển vào thùng rác:", err);
-                    alert("Lỗi: " + err.message);
                 }
             }
             return;  
-        }
-        const favBtn = e.target.closest('.btn-favorite');
-        if (favBtn) {
-            const docId = favBtn.dataset.id;
-            try { 
-                const data = await toggleFavorite(docId); 
-                
-                if (data.isFavorited) {
-                    favBtn.classList.add('favorited');
-                } else {
-                    favBtn.classList.remove('favorited');
-                }
-            } catch (err) {
-                alert("Lỗi: " + err.message);
-            }
-            return; 
-        }
- 
-        const card = e.target.closest('.doc-card');
-        if (card) { 
-            if (typeof viewDocument === 'function') {
-                viewDocument(card);  
-            } else {
-                console.error("Hàm viewDocument() không tìm thấy.");
-            }
         }
     });
 
@@ -297,98 +255,4 @@ function addModalListeners(token) {
 function escapeHTML(str) {
     if (str === null || str === undefined) return '';
     return String(str).replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
-
-/**
- * Mở file preview dựa trên loại file
- */
-function openFilePreview(filename, fileId) {
-    const ext = filename.toLowerCase().split('.').pop();
-    const token = localStorage.getItem("token");
-    
-    // Kiểm tra loại file
-    if (!['doc', 'docx', 'ppt', 'pptx', 'txt', 'pdf', 'jpg', 'jpeg', 'png', 'gif', 'mp4', 'webm'].includes(ext)) {
-        alert('❌ Loại file này không hỗ trợ xem trước.\n\nCác loại file hỗ trợ: DOC, DOCX, PPT, PPTX, TXT, PDF, Images, Video');
-        return;
-    }
-
-    // TXT - Hiển thị trong modal
-    if (ext === 'txt') {
-        const headers = {};
-        if (token) headers['Authorization'] = `Bearer ${token}`;
-        
-        fetch(`${API_URL}/downloads/${fileId}/${filename}`, { headers })
-            .then(r => {
-                if (!r.ok) throw new Error(`HTTP ${r.status}: ${r.statusText}`);
-                return r.text();
-            })
-            .then(text => showTextPreview(filename, text))
-            .catch(err => {
-                console.error('Lỗi tải file TXT:', err);
-                alert('❌ Không thể mở file TXT.\n\nLỗi: ' + err.message);
-            });
-    }
-    // DOC/DOCX - Dùng Google Docs Viewer
-    else if (['doc', 'docx'].includes(ext)) {
-        const fileUrl = `${API_URL}/downloads/${fileId}/${filename}`;
-        const viewerUrl = `https://docs.google.com/gview?url=${encodeURIComponent(fileUrl)}&embedded=true`;
-        const newWin = window.open(viewerUrl, '_blank', 'width=1000,height=700');
-        if (!newWin) alert('⚠️ Vui lòng cho phép pop-up để xem file.');
-    }
-    // PPT/PPTX - Dùng Google Slides Viewer
-    else if (['ppt', 'pptx'].includes(ext)) {
-        const fileUrl = `${API_URL}/downloads/${fileId}/${filename}`;
-        const viewerUrl = `https://docs.google.com/gview?url=${encodeURIComponent(fileUrl)}&embedded=true`;
-        const newWin = window.open(viewerUrl, '_blank', 'width=1000,height=700');
-        if (!newWin) alert('⚠️ Vui lòng cho phép pop-up để xem file.');
-    }
-    // PDF, Images, Video - Mở trực tiếp
-    else {
-        const headers = {};
-        if (token) headers['Authorization'] = `Bearer ${token}`;
-        
-        fetch(`${API_URL}/downloads/${fileId}/${filename}`, { headers })
-            .then(r => {
-                if (!r.ok) throw new Error(`HTTP ${r.status}`);
-                return r.blob();
-            })
-            .then(blob => {
-                const url = window.URL.createObjectURL(blob);
-                const newWin = window.open(url, '_blank');
-                if (!newWin) alert('⚠️ Vui lòng cho phép pop-up để xem file.');
-            })
-            .catch(err => {
-                console.error('Lỗi tải file:', err);
-                alert('❌ Không thể mở file. Vui lòng thử lại.');
-            });
-    }
-}
-
-/**
- * Hiển thị preview cho file TXT
- */
-function showTextPreview(filename, content) {
-    const modal = document.createElement('div');
-    modal.className = 'modal-overlay';
-    modal.style.zIndex = '2000';
-    modal.innerHTML = `
-        <div class="modal-box" style="width: 800px; max-height: 80vh;">
-            <div class="modal-header">
-                <h3>📄 ${escapeHTML(filename)}</h3>
-                <button class="modal-close-btn" type="button">&times;</button>
-            </div>
-            <div style="padding: 24px; max-height: 60vh; overflow-y: auto; background: #fafbff; border-top: 1px solid #ddd5f0;">
-                <pre style="white-space: pre-wrap; word-wrap: break-word; color: #333; font-size: 14px; line-height: 1.8; font-family: 'Courier New', monospace; margin: 0;">${escapeHTML(content)}</pre>
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(modal);
-    
-    const closeBtn = modal.querySelector('.modal-close-btn');
-    closeBtn.addEventListener('click', () => modal.remove());
-    
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) modal.remove();
-    });
 }

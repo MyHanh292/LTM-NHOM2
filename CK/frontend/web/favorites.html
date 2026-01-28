@@ -50,31 +50,6 @@
 
     <script src="js/api.js"></script>
   <script src="js/main.js"></script>
-  <script src="js/documents.js"></script>
-
-<script> 
-        const container = document.getElementById("favorites-container");
-        const token = localStorage.getItem("token");
-
-        if (!token) {
-            container.innerHTML = '<p>📌 <a href="login.html">Đăng nhập</a> để xem danh sách yêu thích.</p>'; 
-        } else {  
-            getFavoriteDocuments(token)
-                .then(data => {
-                    if (data.documents && data.documents.length > 0) {
-                        container.innerHTML = "";
-                        renderFiles(data.documents, token);
-                    } else {
-                        container.innerHTML = "<p>💔 Bạn chưa yêu thích tài liệu nào.</p>";
-                    }
-                })
-                .catch(error => {
-                    console.error("Lỗi tải yêu thích:", error);
-                    container.innerHTML = "<p>❌ Không thể tải danh sách yêu thích. Vui lòng thử lại.</p>";
-                });
-        
-        } 
-  </script>
-
+  <script src="js/favorites.js"></script>
 </body>
 </html>

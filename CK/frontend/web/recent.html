@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
@@ -47,40 +47,9 @@
 
     <script src="js/api.js"></script>
   <script src="js/main.js"></script>
-
-    <script>
-    document.addEventListener("DOMContentLoaded", () => {
-        const container = document.getElementById("recent-view-container");
-        
-        if (!isLoggedIn()) {
-             container.innerHTML = '<p><a href="login.html">Đăng nhập</a> để xem lịch sử của bạn.</p>';
-             return;
-        }
-        getRecentlyViewed()
-            .then(data => {
-                if (data.documents && data.documents.length > 0) {
-                    container.innerHTML = ""; 
-                    
-                    data.documents.forEach(doc => { 
-                        const docCard = `
-                            <div class="doc-card" onclick="viewDocument(this)" data-id="${doc.id}">
-                                <h3>${doc.filename}</h3>
-                                <p>Người đăng: ${doc.owner_name || 'Không rõ'}</p>
-                                <p style="font-weight: bold;">Vừa xem gần đây</p> 
-                            </div>
-                        `;
-                        container.innerHTML += docCard;
-                    });
-                } else {
-                    container.innerHTML = "<p>Bạn chưa xem tài liệu nào.</p>";
-                }
-            })
-            .catch(error => {
-                console.error("Lỗi tải recent.html:", error);
-                container.innerHTML = "<p>Không thể tải lịch sử xem.</p>";
-            });
-    });
-  </script>
-
+  <!-- ================= SCRIPT ================= -->
+  <script src="js/api.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/recent.js"></script>
 </body>
 </html>

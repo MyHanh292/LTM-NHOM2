@@ -35,7 +35,7 @@ CORS(app)
 # Secret Key
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'secretkey')
 
-# Cấu hình SQLite (dễ test, không cần MySQL server)
+# Cấu hình SQLite (thay vì MySQL)
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 DB_PATH = os.path.join(os.path.dirname(BASE_DIR), 'database', 'app.db')
 app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{DB_PATH}'
@@ -359,12 +359,28 @@ def list_documents(current_user):
         'id': d.id,
         'filename': d.filename,
         'visibility': d.visibility,
-        'user_id': d.user_id
+        'user_id': d.user_id,
+        'description': d.description,
+        'created_at': d.created_at.isoformat() if d.created_at else None,
+        'owner_name': d.owner.name if d.owner else 'Unknown',
+        'tags': [t.name for t in d.tags],
+        'file_path': d.file_path
     } for d in query.all()]
     return jsonify({'documents': docs}), 200
 
 @app.route('/api/documents/public', methods=['GET'])
 def list_public_documents():
+    token = request.headers.get('Authorization', '').replace('Bearer ', '')
+    current_user = None
+    
+    # Check if user is logged in
+    if token:
+        try:
+            data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
+            current_user = User.query.get(data['user_id'])
+        except:
+            pass
+    
     docs = Document.query.filter_by(visibility='public', status='uploaded').all()
     return jsonify({
         'documents': [
@@ -373,10 +389,41 @@ def list_public_documents():
                 'filename': d.filename,
                 'description': d.description,
                 'file_path': d.file_path,
-                'tags': [t.name for t in d.tags]
+                'tags': [t.name for t in d.tags],
+                'created_at': d.created_at.isoformat() if d.created_at else None,
+                'owner_name': d.owner.name if d.owner else 'Unknown',
+                'is_favorited': bool(
+                    UserFavorite.query.filter_by(
+                        user_id=current_user.id if current_user else None,
+                        document_id=d.id
+                    ).first()
+                ) if current_user else False
             } for d in docs
         ]
     }), 200
+
+@app.route('/storage/uploads/<path:filepath>', methods=['GET'])
+def serve_upload(filepath):
+    """Serve uploaded files"""
+    try:
+        # Normalize the path to handle Windows backslashes
+        filepath = filepath.replace('\\', '/')
+        full_path = os.path.join(app.config['UPLOAD_FOLDER'], filepath)
+        
+        # Security: prevent directory traversal
+        full_path = os.path.normpath(full_path)
+        upload_folder = os.path.normpath(app.config['UPLOAD_FOLDER'])
+        
+        if not full_path.startswith(upload_folder):
+            return jsonify({'message': 'Không có quyền truy cập'}), 403
+        
+        directory = os.path.dirname(full_path)
+        filename = os.path.basename(full_path)
+        
+        return send_from_directory(directory, filename, as_attachment=False)
+    except Exception as e:
+        print(f"Lỗi serve file: {e}")
+        return jsonify({'message': 'Không tìm thấy file'}), 404
 
 @app.route('/api/documents/<int:doc_id>/download', methods=['GET'])
 @token_required
@@ -390,29 +437,6 @@ def download(current_user, doc_id):
     directory = os.path.join(app.config['UPLOAD_FOLDER'], os.path.dirname(doc.file_path))
     filename = os.path.basename(doc.file_path)
     return send_from_directory(directory, filename, as_attachment=True)
-
-@app.route('/api/downloads/<int:doc_id>/<filename>', methods=['GET'])
-@token_required
-def preview_file(current_user, doc_id, filename):
-    """ Mở file preview (không download, dùng cho xem file trong browser) """
-    doc = Document.query.get(doc_id)
-    if not doc:
-        return jsonify({'message': 'Không tìm thấy tài liệu'}), 404
-    if doc.user_id != current_user.id and doc.visibility == 'private':
-        return jsonify({'message': 'Không có quyền truy cập'}), 403
-    
-    record_view(current_user, doc)
-    directory = os.path.join(app.config['UPLOAD_FOLDER'], os.path.dirname(doc.file_path))
-    actual_filename = os.path.basename(doc.file_path)
-    
-    # Xác minh filename khớp (bảo mật)
-    if not filename.endswith(actual_filename.split('.')[-1]):
-        return jsonify({'message': 'File không hợp lệ'}), 400
-    
-    try:
-        return send_from_directory(directory, actual_filename, as_attachment=False)
-    except:
-        return jsonify({'message': 'Không thể đọc file'}), 500
 
 @app.route('/api/documents/<int:doc_id>/trash', methods=['POST'])
 @token_required
@@ -625,6 +649,17 @@ def get_recent_public_documents():
     Không cần token.
     """
     try:
+        token = request.headers.get('Authorization', '').replace('Bearer ', '')
+        current_user = None
+        
+        # Check if user is logged in
+        if token:
+            try:
+                data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
+                current_user = User.query.get(data['user_id'])
+            except:
+                pass
+        
         # Sắp xếp theo ngày tạo, mới nhất trước
         # Lọc chỉ 'public'
         # Lấy 2 kết quả
@@ -638,7 +673,16 @@ def get_recent_public_documents():
             # Lấy tên người đăng
             'owner_name': d.owner.name, 
             # Định dạng ngày cho dễ đọc
-            'created_at': d.created_at.strftime('%d/%m/%Y') 
+            'created_at': d.created_at.isoformat() if d.created_at else None,
+            'description': d.description,
+            'file_path': d.file_path,
+            'tags': [t.name for t in d.tags],
+            'is_favorited': bool(
+                UserFavorite.query.filter_by(
+                    user_id=current_user.id if current_user else None,
+                    document_id=d.id
+                ).first()
+            ) if current_user else False
         } for d in recent_docs]
         
         return jsonify({'documents': docs_list}), 200
@@ -658,13 +702,18 @@ def get_recently_viewed(current_user):
             .join(UserDocumentView, Document.id == UserDocumentView.document_id) \
             .filter(UserDocumentView.user_id == current_user.id) \
             .order_by(UserDocumentView.last_viewed_at.desc()) \
-            .limit(2).all()
+            .all()
         
         docs_list = [{
             'id': d.id,
             'filename': d.filename,
-            'owner_name': d.owner.name, 
-            'created_at': d.created_at.strftime('%d/%m/%Y') 
+            'owner_name': d.owner.name if d.owner else 'Unknown',
+            'created_at': d.created_at.isoformat() if d.created_at else None,
+            'description': d.description,
+            'tags': [t.name for t in d.tags],
+            'visibility': d.visibility,
+            'file_path': d.file_path,
+            'is_favorited': bool(UserFavorite.query.filter_by(user_id=current_user.id, document_id=d.id).first())
         } for d in docs]
         
         return jsonify({'documents': docs_list}), 200
@@ -681,7 +730,15 @@ def get_trash(current_user):
         status='trashed'
     ).order_by(Document.updated_at.desc()).all()
     
-    docs_list = [{ 'id': d.id, 'filename': d.filename } for d in trashed_docs]
+    docs_list = [{
+        'id': d.id,
+        'filename': d.filename,
+        'description': d.description,
+        'tags': [t.name for t in d.tags],
+        'created_at': d.created_at.isoformat() if d.created_at else None,
+        'updated_at': d.updated_at.isoformat() if d.updated_at else None
+    } for d in trashed_docs]
+    
     return jsonify({'documents': docs_list}), 200
 
 @app.route('/api/documents/favorites', methods=['GET'])
@@ -724,29 +781,75 @@ def toggle_favorite(current_user, doc_id):
         db.session.add(new_fav)
         db.session.commit()
         return jsonify({'message': 'Đã yêu thích', 'isFavorited': True}), 201
+
+@app.route('/api/documents/<int:doc_id>/view', methods=['POST'])
+@token_required
+def log_document_view(current_user, doc_id):
+    """ Ghi lại lần xem tài liệu """
+    doc = Document.query.get(doc_id)
+    if not doc:
+        return jsonify({'message': 'Không tìm thấy tài liệu'}), 404
+    
+    try:
+        from datetime import datetime
+        # Check if view record exists
+        view = UserDocumentView.query.filter_by(user_id=current_user.id, document_id=doc_id).first()
+        if view:
+            # Update existing record
+            view.last_viewed_at = datetime.utcnow()
+        else:
+            # Create new record
+            view = UserDocumentView(user_id=current_user.id, document_id=doc_id, last_viewed_at=datetime.utcnow())
+            db.session.add(view)
+        
+        db.session.commit()
+        return jsonify({'message': 'Đã ghi lại lần xem'}), 200
+    except Exception as e:
+        print(f"Lỗi log view: {e}")
+        db.session.rollback()
+        return jsonify({'message': 'Lỗi ghi lại lần xem'}), 500
+
 @app.route('/api/documents/search', methods=['GET'])
 @token_required
 def search_documents(current_user): 
     keyword = request.args.get('q', '').strip()
-    if not keyword:
-        return jsonify({'message': 'Vui lòng nhập từ khóa tìm kiếm'}), 400
+    tag = request.args.get('tag', '').strip()
+    
+    if not keyword and not tag:
+        return jsonify({'message': 'Vui lòng nhập từ khóa hoặc tag'}), 400
  
-    docs_query = Document.query \
-        .outerjoin(document_tags) \
-        .outerjoin(Tag) \
-        .filter(
-            Document.status == 'uploaded',
-            or_(
-                Document.filename.ilike(f'%{keyword}%'),
-                Document.description.ilike(f'%{keyword}%'),
-                Tag.name.ilike(f'%{keyword}%')
-            ), 
-            or_(
-                Document.visibility == 'public',
-                Document.user_id == current_user.id
-            )
-        ).distinct() \
-        .order_by(Document.created_at.desc())
+    # Nếu tìm theo tag
+    if tag:
+        docs_query = Document.query \
+            .outerjoin(document_tags) \
+            .outerjoin(Tag) \
+            .filter(
+                Document.status == 'uploaded',
+                Tag.name.ilike(f'%{tag}%'),
+                or_(
+                    Document.visibility == 'public',
+                    Document.user_id == current_user.id
+                )
+            ).distinct() \
+            .order_by(Document.created_at.desc())
+    else:
+        # Tìm theo keyword (filename, description, tags)
+        docs_query = Document.query \
+            .outerjoin(document_tags) \
+            .outerjoin(Tag) \
+            .filter(
+                Document.status == 'uploaded',
+                or_(
+                    Document.filename.ilike(f'%{keyword}%'),
+                    Document.description.ilike(f'%{keyword}%'),
+                    Tag.name.ilike(f'%{keyword}%')
+                ), 
+                or_(
+                    Document.visibility == 'public',
+                    Document.user_id == current_user.id
+                )
+            ).distinct() \
+            .order_by(Document.created_at.desc())
 
     docs = [{
         'id': d.id,
@@ -755,11 +858,13 @@ def search_documents(current_user):
         'visibility': d.visibility,
         'user_id': d.user_id,
         'tags': [t.name for t in d.tags],
-        'owner_name': d.owner.name
+        'owner_name': d.owner.name,
+        'created_at': d.created_at.isoformat() if d.created_at else None
     } for d in docs_query.all()]
 
     if not docs:
-        return jsonify({'message': 'Không tìm thấy tài liệu nào', 'documents': []}), 200
+        search_term = tag or keyword
+        return jsonify({'message': f'Không tìm thấy tài liệu nào cho "{search_term}"', 'documents': []}), 200
 
     return jsonify({'documents': docs}), 200
 # ==========================================================
@@ -768,6 +873,5 @@ def search_documents(current_user):
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-        print("✅ Database initialized (SQLite)")
     print("🚀 Khởi chạy Flask (API) và SocketIO (Cầu nối) trên cổng 5000...")
-    socketio.run(app, debug=False, port=5000, allow_unsafe_werkzeug=True)
+    socketio.run(app, debug=True, host='0.0.0.0', port=5000, allow_unsafe_werkzeug=True)

@@ -44,25 +44,7 @@ function handleFileSelect(file) {
     if (!file) return;
     selectedFile = file;
     uploadState.upload_id = `${Date.now()}_${file.name}`;
-    
-    // Truncate long filenames
-    const maxLength = 40;
-    const displayName = file.name.length > maxLength 
-        ? file.name.substring(0, maxLength - 3) + '...' 
-        : file.name;
-    const fileSizeMB = (file.size / 1024 / 1024).toFixed(2);
-    
-    dropZone.innerHTML = `
-        <p style="word-break: break-word; white-space: normal; max-width: 100%; margin: 0;" title="${file.name}">
-            📄 <strong>${displayName}</strong>
-        </p>
-        <p style="color: #999; margin-top: 8px; font-size: 14px;">${fileSizeMB} MB</p>
-        <button id="changeFIle" style="margin-top: 15px; padding: 8px 20px; background: #f0f0f0; border: 1px solid #ddd; border-radius: 8px; cursor: pointer; font-size: 13px;">↩️ Chọn file khác</button>
-    `;
-    
-    // Add event listener to change file button
-    document.getElementById('changeFIle').addEventListener('click', () => fileInput.click());
-    
+    dropZone.innerHTML = `<p>📄 ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)</p>`;
     resetUI();
     startBtn.disabled = false;
 }
@@ -75,17 +57,11 @@ pauseBtn.addEventListener("click", () => {
     uploadState.isPaused = true;
     // Gửi lệnh pause tới server TCP (qua cầu nối)
     sendJsonMessage({ action: "pause", upload_id: uploadState.upload_id });
-    setStatus("⏸️ Đang tạm dừng...", "info");
-    pauseBtn.disabled = true;
-    resumeBtn.disabled = false;
 });
 resumeBtn.addEventListener("click", () => {
     uploadState.isPaused = false;
     // Gửi lệnh resume và kích hoạt lại sendChunk
     sendJsonMessage({ action: "resume", upload_id: uploadState.upload_id });
-    setStatus(`Đang tiếp tục tải... ${((uploadState.offset / uploadState.file.size) * 100).toFixed(0)}%`, "info");
-    pauseBtn.disabled = false;
-    resumeBtn.disabled = true;
     sendChunk(); 
 });
 stopBtn.addEventListener("click", () => {
@@ -95,11 +71,17 @@ stopBtn.addEventListener("click", () => {
         sendJsonMessage({ action: "stop", upload_id: uploadState.upload_id });
         socket.disconnect(); 
     }
-    pauseBtn.disabled = true;
-    stopBtn.disabled = true;
-    resumeBtn.disabled = true;
-    startBtn.disabled = false;
-    setStatus("🚫 Đã hủy! Không tải nữa. Chọn file khác để tải lên.", "error");
+    resetUI();
+    setStatus("⛔ Đã hủy upload. Vui lòng chọn file khác để tiếp tục.", "error");
+    // Clear selected file - cannot re-upload same file after cancel
+    selectedFile = null;
+    dropZone.innerHTML = `<div class="drop-content">
+        <p class="drop-title">📎 Kéo tệp vào đây</p>
+        <span class="drop-separator">hoặc</span>
+        <button id="browseFile" class="btn-select-file">🖱️ Chọn tệp từ máy</button>
+        <input type="file" id="fileInput" hidden>
+    </div>`;
+    fileInput.value = '';
 });
 
 // =============================================
@@ -122,11 +104,9 @@ async function startUpload() {
     uploadState.isPaused = false;
     uploadState.isStopped = false;
 
-    // Kết nối tới Socket.IO server - Dùng cùng host với API
-    const host = window.location.hostname;
-    const port = 5000;
-    const socketUrl = `http://${host}:${port}`;
-    connectToSocketIO(socketUrl);
+    // Kết nối tới Socket.IO server (cổng 5000, cùng với Flask)
+    // URL này đã bao gồm /socket.io/ theo mặc định
+    connectToSocketIO("http://localhost:5000");
 }
 
 /**
@@ -152,9 +132,6 @@ function connectToSocketIO(url) {
     });
 
     socket.on("disconnect", () => {
-        if (!uploadState.isStopped && uploadState.offset >= uploadState.file.size) {
-            return;
-        }
         if (!uploadState.isStopped) {
             setStatus("Mất kết nối máy chủ.", "error");
             resetUI();
@@ -227,14 +204,23 @@ function handleSocketMessage(data) {
         updateProgress(data.offset, uploadState.file.size);
         uploadState.offset = data.offset;
 
-        if (data.offset <Tải lên thành côngle.size) {
+        if (data.offset < uploadState.file.size) {
             sendChunk(); // Gửi chunk tiếp
         } else {
-            setStatus("✅ Upload hoàn tất! Đang chuyển hướng...", "success");
+            const completeTime = new Date().toLocaleString('vi-VN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            setStatus(`✅ Upload hoàn tất! Tải lên lúc: ${completeTime}`, "success");
+            document.getElementById("uploadTime").textContent = `⏰ ${completeTime}`;
             progressBar.style.width = "100%";
             resetUI();
             socket.disconnect();
-            setTimeout(() => window.location.href = "documents.html", 800); 
+            setTimeout(() => window.location.href = "myfiles.html", 2000); // Redirect to My Documents
         }
     }
 }
@@ -254,7 +240,13 @@ async function sendChunk() {
 
     pauseBtn.disabled = false;
     resumeBtn.disabled = true;
-    setStatus(`Đang tải... ${((uploadState.offset / uploadState.file.size) * 100).toFixed(0)}%`, "info");
+    const percent = ((uploadState.offset / uploadState.file.size) * 100).toFixed(0);
+    const now = new Date().toLocaleString('vi-VN', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    });
+    setStatus(`Đang tải... ${percent}% | ${now}`, "info");
 
     const start = uploadState.offset;
     const end = Math.min(start + uploadState.chunk_size, uploadState.file.size);
@@ -274,7 +266,8 @@ async function sendChunk() {
     };
     sendJsonMessage(header);
 
-    // 2. Gửi Data (Binary)
+    // 2. Gửi Data (Binary) - Small delay for visibility
+    await new Promise(resolve => setTimeout(resolve, 100));
     sendBytes(chunk);
 }
 
@@ -287,10 +280,25 @@ function updateProgress(loaded, total) {
 function setStatus(message, type = "info") {
     statusText.textContent = message;
     statusText.className = `status-text ${type}`; // info, success, error
+    
+    // Show current timestamp if upload completes
+    if (type === "success") {
+        const now = new Date();
+        const time = now.toLocaleString('vi-VN', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+        document.getElementById("uploadTime").textContent = `⏰ Tải lên lúc: ${time}`;
+    }
 }
 
+
 function resetUI() {
-    startBtn.disabled = false;
+    startBtn.disabled = !selectedFile; // Only enable if file is selected AND not stopped
     pauseBtn.disabled = true;
     resumeBtn.disabled = true;
     stopBtn.disabled = true;

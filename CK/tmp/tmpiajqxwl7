@@ -1,0 +1,25 @@
+{
+  "1769363657785_Nhom2-PseudoCode.docx": {
+    "status": "stopped"
+  },
+  "1769363752262_Bắt đầu tải file.png": {
+    "status": "resumed",
+    "peer": "127.0.0.1:54932"
+  },
+  "1769399549162_video.mp4": {
+    "filename": "video.mp4",
+    "filesize": 109291567,
+    "offset": 35848192,
+    "status": "uploading",
+    "peer": "127.0.0.1:53965",
+    "metadata": {
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjo2LCJleHAiOjE3Njk0ODU5MTB9.ffdzpwEAlbvEYfDqkzsbwTdTst_SV1tJdgHf7nsXW8o",
+      "description": "",
+      "visibility": "public",
+      "tags": [
+        "um"
+      ]
+    },
+    "created_at": 1769399554.3094807
+  }
+}

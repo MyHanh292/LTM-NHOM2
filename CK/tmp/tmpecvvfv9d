@@ -1,0 +1,85 @@
+{
+  "1769363657785_Nhom2-PseudoCode.docx": {
+    "status": "stopped"
+  },
+  "1769363752262_Bắt đầu tải file.png": {
+    "status": "resumed",
+    "peer": "127.0.0.1:54932"
+  },
+  "1769399549162_video.mp4": {
+    "filename": "video.mp4",
+    "filesize": 109291567,
+    "offset": 37158912,
+    "status": "uploading",
+    "peer": "127.0.0.1:53965",
+    "metadata": {
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjo2LCJleHAiOjE3Njk0ODU5MTB9.ffdzpwEAlbvEYfDqkzsbwTdTst_SV1tJdgHf7nsXW8o",
+      "description": "",
+      "visibility": "public",
+      "tags": [
+        "um"
+      ]
+    },
+    "created_at": 1769399554.3094807
+  },
+  "1769400040650_1. Sildes bai giang.rar": {
+    "filename": "1. Sildes bai giang.rar",
+    "filesize": 8496127,
+    "offset": 3473408,
+    "status": "stopped",
+    "peer": "127.0.0.1:63388",
+    "metadata": {
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjo2LCJleHAiOjE3Njk0ODYzNzJ9.fMMIjBHYj1gXwTnFFf3rEffX3AjlozITGmV8Vmh2_h8",
+      "description": "",
+      "visibility": "public",
+      "tags": []
+    },
+    "created_at": 1769400042.9880445
+  },
+  "1769400334410_1. Sildes bai giang.rar": {
+    "filename": "1. Sildes bai giang.rar",
+    "filesize": 8496127,
+    "offset": 5767168,
+    "status": "uploading",
+    "peer": "127.0.0.1:54283",
+    "metadata": {
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjo2LCJleHAiOjE3Njk0ODY3MTV9.3RVPeDsTwAVUKf77V7CiPVveVIQ5Dybz911rk7CpRCo",
+      "description": "",
+      "visibility": "public",
+      "tags": [
+        "hanh"
+      ]
+    },
+    "created_at": 1769400340.4339418
+  },
+  "1769519850698_btcc.zip": {
+    "filename": "btcc.zip",
+    "filesize": 86583376,
+    "offset": 16580608,
+    "status": "uploading",
+    "peer": "127.0.0.1:51336",
+    "metadata": {
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjo2LCJleHAiOjE3Njk2MDYwODB9.RLarfBsM3wJB8hVj6XE_ha4kb8YCMv4RmT70lrOaz0g",
+      "description": "",
+      "visibility": "public",
+      "tags": [
+        "hanh"
+      ]
+    },
+    "created_at": 1769519858.1427932
+  },
+  "1769519877689_video.mp4": {
+    "filename": "video.mp4",
+    "filesize": 109291567,
+    "offset": 14876672,
+    "status": "uploading",
+    "peer": "127.0.0.1:49810",
+    "metadata": {
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjo2LCJleHAiOjE3Njk2MDYwODB9.RLarfBsM3wJB8hVj6XE_ha4kb8YCMv4RmT70lrOaz0g",
+      "description": "",
+      "visibility": "public",
+      "tags": []
+    },
+    "created_at": 1769519880.3610864
+  }
+}

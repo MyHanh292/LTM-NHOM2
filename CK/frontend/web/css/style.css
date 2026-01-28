@@ -556,6 +556,262 @@ body::before {
 
 .public-docs-section .doc-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.recent-upload .doc-grid,
+.recent-view .doc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+}
+/* ==================== DOC CARD STYLING ==================== */
+
+.doc-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.doc-card h3 {
+  font-size: 14px;
+  font-weight: 700;
+  color: #2d9b7d;
+  margin: 0;
+  word-wrap: break-word;
+  word-break: break-word;
+  line-height: 1.3;
+  max-height: 3em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.doc-card .desc {
+  font-size: 13px;
+  color: #666;
+  margin: 0;
+  line-height: 1.4;
+  word-wrap: break-word;
+  word-break: break-word;
+}
+
+.doc-card .info-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+.doc-card .info-row strong {
+  color: #2d9b7d;
+  font-weight: 600;
+}
+
+.doc-card .info-row span {
+  color: #555;
+  word-wrap: break-word;
+  word-break: break-word;
+}
+
+.doc-card .status {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-weight: 600;
+  width: fit-content;
+}
+
+.doc-card .status.public {
+  background: #e3f7e8;
+  color: #28a085;
+}
+
+.doc-card .status.private {
+  background: #fef3e8;
+  color: #d97706;
+}
+
+.doc-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.btn-action {
+  padding: 6px 10px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  white-space: normal;
+  flex: 1;
+  min-width: 70px;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.btn-edit {
+  background: #fef3c7;
+  color: #b45309;
+  border-color: #f59e0b;
+}
+
+.btn-edit:hover {
+  background: #fbbf24;
+  transform: translateY(-1px);
+}
+
+.btn-delete {
+  background: #fee2e2;
+  color: #dc2626;
+  border-color: #fca5a5;
+}
+
+.btn-delete:hover {
+  background: #fca5a5;
+  transform: translateY(-1px);
+}
+
+.btn-restore {
+  background: #d1fae5;
+  color: #059669;
+  border-color: #6ee7b7;
+}
+
+.btn-restore:hover {
+  background: #6ee7b7;
+  transform: translateY(-1px);
+}
+
+.btn-delete-perm {
+  background: #fecaca;
+  color: #991b1b;
+  border-color: #f87171;
+}
+
+.btn-delete-perm:hover {
+  background: #f87171;
+  transform: translateY(-1px);
+}
+
+.btn-favorite {
+  background: #ffe4e6;
+  color: #be185d;
+  border-color: #fbcfe8;
+}
+
+.btn-favorite:hover,
+.btn-favorite.favorited {
+  background: #ec4899;
+  color: white;
+  transform: translateY(-1px);
+}
+
+.btn-favorite.favorited {
+  background: #ec4899;
+  color: white;
+}
+
+.trash-item {
+  background: rgba(255, 255, 255, 0.95);
+  border-left: 4px solid #dc2626;
+}
+
+/* ==================== MODAL VIEWER ==================== */
+
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal.hidden {
+  display: none;
+}
+
+.modal:not(.hidden) {
+  display: flex;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  max-width: 90%;
+  max-height: 90vh;
+  width: 800px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #2d9b7d;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 28px;
+  cursor: pointer;
+  color: #999;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-close:hover {
+  color: #333;
+}
+
+.modal-body {
+  padding: 16px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+#viewerContainer {
+  width: 100%;
+  height: 100%;
+}
+
+#viewerContainer img {
+  max-width: 100%;
+  max-height: 70vh;
+  object-fit: contain;
+  margin: 0 auto;
+  display: block;
+}
+
+#viewerContainer iframe {
+  width: 100%;
+  height: 70vh;
+  border: none;
 }

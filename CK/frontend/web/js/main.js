@@ -1,52 +1,89 @@
-// ======================
+// File: frontend/web/js/main.js
 // Script chung: menu, sidebar, navigation
-// ======================
-window.API_URL = `http://${window.location.hostname}:5000`;
-// Hàm này phải được gọi bởi TẤT CẢ các trang (trừ login/register)
-// Nó dựa vào file api.js (phải được tải trước)
+
+window.API_URL = "http://127.0.0.1:5000";
+
+// Helper function format date safely
+function formatDate(dateStr) {
+    if (!dateStr) return 'N/A';
+    try {
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return 'N/A';
+        return date.toLocaleDateString('vi-VN', { year: 'numeric', month: '2-digit', day: '2-digit' });
+    } catch (e) {
+        return 'N/A';
+    }
+}
+
 function setupGlobalUI() {
-    // Đảm bảo hàm isLoggedIn từ api.js đã tồn tại
     if (typeof isLoggedIn !== 'function') {
-        console.error("Lỗi: api.js chưa được tải. Không thể setup UI.");
+        console.error("Lỗi: api.js chưa được tải.");
         return;
     }
 
-    const token = isLoggedIn(); // Dùng hàm từ api.js
-    
-    // Lấy tất cả các nút
+    const token = isLoggedIn();
     const loginBtn = document.getElementById("loginBtn");
     const registerBtn = document.getElementById("registerBtn");
-    const logoutBtn = document.getElementById("logoutBtn"); // Nút đăng xuất mới
+    const logoutBtn = document.getElementById("logoutBtn");
 
     if (token) {
-        // === ĐÃ ĐĂNG NHẬP ===
+        // ĐÃ ĐĂNG NHẬP
         if (loginBtn) loginBtn.classList.add("hidden");
         if (registerBtn) registerBtn.classList.add("hidden");
         
-        // Hiện nút Đăng xuất
         if (logoutBtn) {
             logoutBtn.classList.remove("hidden");
-            
-            // Gán sự kiện click để gọi hàm logout() từ api.js
             logoutBtn.addEventListener("click", () => {
                 if (confirm("Bạn có muốn đăng xuất không?")) {
-                    // Đảm bảo hàm logout từ api.js đã tồn tại
                     if (typeof logout === 'function') {
                         logout(); 
-                    } else {
-                        console.error("Lỗi: Hàm logout() không tìm thấy trong api.js");
                     }
                 }
             });
         }
-
+        
+        // Auto-load recently viewed on page load
+        setTimeout(() => {
+            loadRecentlyViewedImmediately(token);
+        }, 500);
     } else {
-        // === CHƯA ĐĂNG NHẬP ===
+        // CHƯA ĐĂNG NHẬP
         if (loginBtn) loginBtn.classList.remove("hidden");
         if (registerBtn) registerBtn.classList.remove("hidden");
-        
-        // Ẩn nút Đăng xuất
         if (logoutBtn) logoutBtn.classList.add("hidden");
+    }
+}
+
+// Load recently viewed on page load
+async function loadRecentlyViewedImmediately(token) {
+    const viewGrid = document.getElementById("recent-view-grid");
+    if (!viewGrid) return;
+    
+    try {
+        const headers = { 'Authorization': `Bearer ${token}` };
+        const response = await fetch(`${window.API_URL}/api/documents/recently-viewed`, {
+            method: 'GET',
+            headers
+        });
+        
+        const data = await response.json();
+        
+        if (data.documents && data.documents.length > 0) {
+            viewGrid.innerHTML = "";
+            // Show ALL recently viewed files, not just 2
+            data.documents.forEach(doc => {
+                const card = createPublicDocCard(doc, token);
+                viewGrid.appendChild(card);
+            });
+            if (!viewGrid._hasFavListener) {
+                addPublicDocButtonListeners(viewGrid, token);
+                viewGrid._hasFavListener = true;
+            }
+        } else {
+            viewGrid.innerHTML = "<p style='grid-column: 1/-1; text-align: center; color: #999;'>Chưa có file được xem</p>";
+        }
+    } catch (error) {
+        console.warn("Could not load recently viewed:", error);
     }
 }
  
@@ -54,209 +91,76 @@ window.addEventListener("DOMContentLoaded", () => {
     setupGlobalUI();
     loadHomepageFeed();
     loadPublicDocuments();
+    
     const searchBtn = document.getElementById("searchBtn");
+    const searchInput = document.getElementById("searchInput");
+    
     if (searchBtn) {
-        searchBtn.addEventListener("click", async () => {
-            const keyword = document.getElementById("searchInput").value.trim();
-            
-            // 1. Kiểm tra từ khóa
-            if (keyword === "") {
-                alert("Vui lòng nhập từ khóa tìm kiếm!");
-                return;
-            }
-
-            // 2. Lấy token (Vì backend yêu cầu @token_required)
-            const token = localStorage.getItem("token");
-            if (!token) {
-                alert("Bạn cần đăng nhập để sử dụng tính năng tìm kiếm!");
-                window.location.href = "login.html";
-                return;
-            }
-
-            try {
-                // 3. SỬA URL: Dùng /api/documents/search thay vì /public
-                // 4. SỬA PARAM: Dùng ?q= thay vì ?search=
-                const url = `${API_URL}/api/documents/search?q=${encodeURIComponent(keyword)}`;
-                
-                const response = await fetch(url, { 
-                    method: "GET",
-                    // 5. THÊM HEADERS: Gửi kèm token
-                    headers: {
-                        "Authorization": "Bearer " + token,
-                        "Content-Type": "application/json"
-                    }
-                });
-
-                // Xử lý lỗi 401 (hết hạn token) hoặc 403
-                if (response.status === 401) {
-                    alert("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.");
-                    window.location.href = "login.html";
-                    return;
-                }
-
-                const data = await response.json();
-                const container = document.getElementById("public-docs-grid"); // Hoặc vùng hiển thị kết quả bạn muốn
-                container.innerHTML = "";
-
-                // Xử lý hiển thị kết quả
-                if (!response.ok || !data.documents || data.documents.length === 0) {
-                    container.innerHTML = `<p>${data.message || 'Không tìm thấy tài liệu nào phù hợp.'}</p>`;
-                    return;
-                }
-
-                // Render danh sách tài liệu tìm được
-                data.documents.forEach(doc => {
-                    const docCard = document.createElement("div");
-                    docCard.className = "doc-card";
-                    docCard.dataset.id = doc.id;
-                    // Xử lý hiển thị tags
-                    const tagsString = (doc.tags && doc.tags.length > 0) ? doc.tags.join(', ') : '<i>Không có thẻ</i>';
-                    
-                    docCard.innerHTML = `
-                        <h3>${doc.filename}</h3>
-                        <p>${doc.description || '<i>Chưa có mô tả</i>'}</p>
-                        <p>Tags: ${tagsString}</p>
-                        <p><small>Người đăng: ${doc.owner_name}</small></p>
-                        <div class="doc-card-actions">
-                            <button class="btn-action btn-favorite ${doc.is_favorited ? 'favorited' : ''}" data-id="${doc.id}">❤️ Yêu thích</button>
-                        </div>
-                    `;
-                    container.appendChild(docCard);
-                });
-                
-                // Gán lại sự kiện click cho các card vừa tạo (để xem chi tiết)
-                // Lưu ý: Cần gọi lại logic gán event click viewDocument nếu cần thiết ở đây
-                
-            } catch (err) {
-                console.error("Lỗi tìm kiếm:", err);
-                alert("Lỗi kết nối server khi tìm kiếm!");
-            }
+        searchBtn.addEventListener("click", () => performSearch());
+    }
+    if (searchInput) {
+        searchInput.addEventListener("keypress", (e) => {
+            if (e.key === 'Enter') performSearch();
         });
     }
-
 });
 
+async function performSearch() {
+    const keyword = document.getElementById("searchInput").value.trim();
+    
+    if (keyword === "") {
+        alert("Vui lòng nhập từ khóa tìm kiếm!");
+        return;
+    }
 
-// ======================
-// 📄 Xem chi tiết & Xem trước tài liệu
-// (Giữ nguyên code của bạn)
-// ====================== 
-
-function viewDocument(el) {
-    const docId = el.dataset.id;
-    const token = localStorage.getItem("token"); // Đảm bảo dùng 'token' (đã sửa)
+    const token = localStorage.getItem("token");
     if (!token) {
-        alert("Vui lòng đăng nhập trước khi xem tài liệu!");
+        alert("Bạn cần đăng nhập để sử dụng tính năng tìm kiếm!");
         window.location.href = "login.html";
         return;
     }
 
-    // Kiểm tra xem apiRequest (từ api.js) có tồn tại không
-    if (typeof apiRequest !== 'function') {
-        alert("Lỗi: api.js chưa tải xong. Không thể xem tài liệu.");
-        return;
-    }
-    
-    // SỬA: Dùng apiRequest thay vì fetch để tự động xử lý lỗi 401
-    apiRequest(`/documents/${docId}`, "GET")
-        .then(data => {
-            if (data.message) { // apiRequest có thể vẫn trả về data.message nếu logic backend xử lý riêng
-                alert("⚠️ " + data.message);
-            } else {
-                // Xây đường dẫn file thật để nhúng xem
-                // Chú ý: Cần đảm bảo backend (5000) có thể phục vụ file tĩnh từ /storage/uploads
-                // Đây là một rủi ro bảo mật nếu không cấu hình đúng.
-                
-                // Giả sử file_path trả về là "upload_id/filename.pdf"
-                // và app.py có 1 route tĩnh phục vụ "storage/uploads"
-                // Tạm thời, chúng ta cần 1 route tĩnh an toàn.
-                
-                // Cách đơn giản nhất (NHƯNG KÉM AN TOÀN):
-                // Cần cấu hình Flask để phục vụ file từ /storage/uploads
-                // Dựa trên app.py, file_path lưu là "relative_path"
-                // Ví dụ: "1678886400_Test.pdf" (nếu lưu phẳng)
-                // hoặc "123456_id/Test.pdf" (nếu lưu theo upload_id)
-                
-                // Giả sử app.py lưu "123456_id/Test.pdf" và STORAGE_DIR là "../storage/uploads"
-                // Đường dẫn trong DB (doc.file_path) là "123456_id/Test.pdf"
-                
-                // Vấn đề: Cổng 5000 (Flask) không tự động phục vụ file tĩnh từ /storage/uploads
-                // Route /download của bạn yêu cầu token.
-                
-                // -> Chúng ta nên dùng route /download an toàn
-                downloadAndPreview(docId, data.filename);
-            }
-        })
-        .catch(err => {
-            console.error("Lỗi khi xem tài liệu:", err);
-            // apiRequest đã tự showError(err.message)
-        });
-}
-
-/**
- * Hàm mới: Tải file (dưới dạng blob) và hiển thị trong Iframe
- * An toàn hơn là lộ link trực tiếp
- */
-async function downloadAndPreview(docId, filename) {
     try {
-        const token = localStorage.getItem("token");
-        const response = await fetch(`${API_BASE}/documents/${docId}/download`, {
-            headers: { "Authorization": "Bearer " + token }
+        // Thử tìm theo tag trước
+        let url = `${window.API_URL}/api/documents/search?tag=${encodeURIComponent(keyword)}`;
+        
+        const response = await fetch(url, { 
+            method: "GET",
+            headers: {
+                "Authorization": "Bearer " + token,
+                "Content-Type": "application/json"
+            }
         });
 
-        if (!response.ok) {
-            const errData = await response.json();
-            throw new Error(errData.message || `Lỗi tải file (${response.status})`);
-        }
-
-        const blob = await response.blob();
-        const fileUrl = URL.createObjectURL(blob);
-        
-        // Xác định xem file có phải PDF hay không
-        const isPDF = filename.toLowerCase().endsWith(".pdf");
-
-        // Nếu là PDF, nhúng trực tiếp.
-        // Nếu không phải, Google Viewer KHÔNG THỂ xem blob URL.
-        // Google Viewer yêu cầu URL công khai.
-        
-        let previewUrl;
-        if (isPDF) {
-            previewUrl = fileUrl;
-        } else {
-            // Đối với DOCX, PPTX... chúng ta không thể dùng Google Viewer với blob.
-            // Giải pháp: Hiển thị thông báo "Không hỗ trợ xem trước" hoặc "Đang tải về"
-            alert("Không hỗ trợ xem trước cho định dạng file này. Tệp sẽ được tải về.");
-            
-            // Tạo link ẩn để tải về
-            const link = document.createElement('a');
-            link.href = fileUrl;
-            link.download = filename;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+        if (response.status === 401) {
+            alert("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.");
+            window.location.href = "login.html";
             return;
         }
-        
-        // Tạo popup (code cũ của bạn)
-        const popup = document.createElement("div");
-        popup.className = "modal-overlay";
-        popup.innerHTML = `
-          <div class="modal-box" style="max-width: 90%; width: 900px; height: 90vh; display:flex; flex-direction:column;">
-            <div class="modal-header">
-              <h3>${filename}</h3>
-              <button class="modal-close-btn" onclick="this.closest('.modal-overlay').remove()">×</button>
-            </div>
-            <div class="modal-body" style="flex:1; overflow:hidden;">
-              <iframe src="${previewUrl}" 
-                      style="width:100%; height:100%; border:none;"
-                      title="Xem tài liệu"></iframe>
-            </div>
-          </div>`;
-        document.body.appendChild(popup);
 
-    } catch (err) {
-        console.error("Lỗi khi tải/xem trước tài liệu:", err);
-        alert(`Không thể tải tài liệu: ${err.message}`);
+        const data = await response.json();
+        const container = document.getElementById("public-docs-grid");
+        if (container) {
+            container.innerHTML = "";
+            
+            if (!data.documents || data.documents.length === 0) {
+                container.innerHTML = `<p>Không tìm thấy kết quả cho tag "${keyword}"</p>`;
+                return;
+            }
+
+            data.documents.forEach(doc => {
+                const card = createPublicDocCard(doc, token);
+                container.appendChild(card);
+            });
+            
+            if (!container._hasFavListener) {
+                addPublicDocButtonListeners(container, token);
+                container._hasFavListener = true;
+            }
+        }
+    } catch (error) {
+        console.error("Lỗi tìm kiếm:", error);
+        alert("Lỗi tìm kiếm. Vui lòng thử lại.");
     }
 }
 
@@ -264,19 +168,27 @@ async function loadHomepageFeed() {
     const uploadGrid = document.getElementById("recent-upload-grid");
     if (uploadGrid) {
         try {
-            const data = await apiRequest("/documents/recent-public", "GET", null, false);
+            const token = localStorage.getItem("token");
+            const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+            
+            const response = await fetch(`${window.API_URL}/api/documents/recent-public`, { 
+                method: 'GET',
+                headers 
+            });
+            
+            const data = await response.json();
+            
             if (data.documents && data.documents.length > 0) {
                 uploadGrid.innerHTML = ""; 
                 data.documents.forEach(doc => {
-                    const docCard = `
-                        <div class="doc-card" onclick="viewDocument(this)" data-id="${doc.id}">
-                            <h3>${doc.filename}</h3>
-                            <p>Người đăng: ${doc.owner_name || 'Không rõ'}</p>
-                            <p>Ngày tải: ${doc.created_at}</p>
-                        </div>
-                    `;
-                    uploadGrid.innerHTML += docCard;
+                    const card = createPublicDocCard(doc, token);
+                    uploadGrid.appendChild(card);
                 });
+                
+                if (!uploadGrid._hasFavListener) {
+                    addPublicDocButtonListeners(uploadGrid, token);
+                    uploadGrid._hasFavListener = true;
+                }
             } else {
                 uploadGrid.innerHTML = "<p>Chưa có tài liệu public nào.</p>";
             }
@@ -292,20 +204,22 @@ async function loadHomepageFeed() {
              viewGrid.innerHTML = '<p><a href="login.html">Đăng nhập</a> để xem lịch sử của bạn.</p>';
         } else { 
             try { 
-                const data = await getRecentlyViewed();  
+                const token = localStorage.getItem("token");
+                const headers = { 'Authorization': `Bearer ${token}` };
+                
+                const response = await fetch(`${window.API_URL}/api/documents/recently-viewed`, {
+                    method: 'GET',
+                    headers
+                });
+                
+                const data = await response.json();
                 
                 if (data.documents && data.documents.length > 0) {
                     viewGrid.innerHTML = "";  
                     
                     data.documents.forEach(doc => {
-                        const docCard = `
-                            <div class="doc-card" onclick="viewDocument(this)" data-id="${doc.id}">
-                                <h3>${doc.filename}</h3>
-                                <p>Người đăng: ${doc.owner_name || 'Không rõ'}</p>
-                                <p style="font-weight: bold;">Vừa xem gần đây</p> 
-                            </div>
-                        `;
-                        viewGrid.innerHTML += docCard;
+                        const card = createPublicDocCard(doc, token);
+                        viewGrid.appendChild(card);
                     });
                 } else {
                     viewGrid.innerHTML = "<p>Bạn chưa xem tài liệu nào.</p>";
@@ -317,12 +231,22 @@ async function loadHomepageFeed() {
         }
     }
 }
+
 async function loadPublicDocuments() {
     const container = document.getElementById("public-docs-grid");
+    if (!container) return;
+    
     container.innerHTML = "<p>Đang tải...</p>";
 
     try {
-        const response = await fetch(`${API_URL}/api/documents/public`, { method: 'GET' });
+        const token = localStorage.getItem("token");
+        const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+        
+        const response = await fetch(`${window.API_URL}/api/documents/public`, { 
+            method: 'GET',
+            headers
+        });
+        
         const data = await response.json();
 
         if (response.ok) {
@@ -333,59 +257,260 @@ async function loadPublicDocuments() {
             }
 
             data.documents.forEach(doc => {
-                const docCard = document.createElement("div");
-                docCard.className = "doc-card";
-                docCard.dataset.id = doc.id;
-
-                const tagsString = (doc.tags || []).join(', ');
-
-                docCard.innerHTML = `
-                    <h3>${doc.filename}</h3>
-                    <p>${doc.description || '<i>Chưa có mô tả</i>'}</p>
-                    <p>Tags: ${tagsString || '<i>Không có thẻ</i>'}</p>
-                    <div class="doc-card-actions">
-                        <button class="btn-action btn-favorite ${doc.is_favorited ? 'favorited' : ''}" data-id="${doc.id}">❤️ Yêu thích</button>
-                    </div>
-                `;
-
-                container.appendChild(docCard);
+                const card = createPublicDocCard(doc, token);
+                container.appendChild(card);
             });
- 
-            container.addEventListener('click', async (e) => {
-                const favBtn = e.target.closest('.btn-favorite');
-                if (favBtn) {
-                    e.stopPropagation(); 
-                    const docId = favBtn.dataset.id;
-                    const token = localStorage.getItem('token');
-                    if (!token) {
-                        alert("Vui lòng đăng nhập để thêm vào Bộ nhớ của tôi!");
-                        return;
-                    }
-                    try {
-                        const data = await toggleFavorite(docId);
-                        if (data.isFavorited) {
-                            favBtn.classList.add('favorited');
-                        } else {
-                            favBtn.classList.remove('favorited');
-                        }
-                    } catch (err) {
-                        alert("Lỗi: " + err.message);
-                    }
-                    return;
-                }
-
-                const card = e.target.closest('.doc-card');
-                if (card && typeof viewDocument === 'function') {
-                    viewDocument(card);
-                }
-            });
-
+            
+            if (!container._hasFavListener) {
+                addPublicDocButtonListeners(container, token);
+                container._hasFavListener = true;
+            }
         } else {
-            container.innerHTML = `<p>Lỗi: ${data.message}</p>`;
+            container.innerHTML = "<p>Lỗi tải tài liệu.</p>";
         }
-    } catch (err) {
-        console.error(err);
-        container.innerHTML = "<p>Lỗi kết nối máy chủ.</p>";
+    } catch (error) {
+        console.error("Lỗi:", error);
+        container.innerHTML = "<p>Lỗi tải tài liệu.</p>";
     }
 }
+
+function createPublicDocCard(doc, token) {
+    const card = document.createElement('div');
+    card.className = 'doc-card';
+    card.dataset.id = doc.id;
+    
+    const tagsString = (doc.tags || []).join(', ');
+    
+    const title = document.createElement('h3');
+    title.textContent = doc.filename || '';
+    title.style.cursor = 'pointer';
+    title.title = 'Nhấp để xem tài liệu';
+    
+    const owner = document.createElement('div');
+    owner.className = 'info-row';
+    owner.innerHTML = `<strong>Tác giả:</strong> <span>${escapeHTML(doc.owner_name || 'Không rõ')}</span>`;
+    
+    const desc = document.createElement('p');
+    desc.className = 'desc';
+    desc.innerHTML = doc.description ? escapeHTML(doc.description) : '<i>Chưa có mô tả</i>';
+    
+    const infoRow2 = document.createElement('div');
+    infoRow2.className = 'info-row';
+    infoRow2.innerHTML = `<strong>Tags:</strong> <span>${tagsString || '<i>Không có thẻ</i>'}</span>`;
+    
+    const infoRow3 = document.createElement('div');
+    infoRow3.className = 'info-row';
+    const dateStr = formatDate(doc.created_at);
+    infoRow3.innerHTML = `<strong>Ngày tải:</strong> <span>${dateStr}</span>`;
+    
+    const actions = document.createElement('div');
+    actions.className = 'doc-card-actions';
+    
+    // ALWAYS show favorite button (even for non-logged-in users)
+    const favBtn = document.createElement('button');
+    favBtn.className = 'btn-action btn-favorite';
+    favBtn.type = 'button';
+    favBtn.dataset.id = doc.id;
+    
+    if (token) {
+        const currentUser = getCurrentUser();
+        // Check if this is user's own file
+        if (currentUser && doc.owner_name === currentUser.name) {
+            // Hide favorite for own files
+            favBtn.style.display = 'none';
+        } else {
+            // Show favorite for other users' files
+            if (doc.is_favorited) {
+                favBtn.classList.add('favorited');
+                favBtn.textContent = '❤️ Đã yêu thích';
+            } else {
+                favBtn.textContent = '🤍 Yêu thích';
+            }
+            favBtn.dataset.canFav = 'true';
+        }
+    } else {
+        // Not logged in - show favorite but require login
+        favBtn.textContent = '🤍 Yêu thích';
+        favBtn.dataset.canFav = 'false';
+    }
+    
+    actions.appendChild(favBtn);
+    
+    // Add view button
+    const viewBtn = document.createElement('button');
+    viewBtn.className = 'btn-action btn-edit';
+    viewBtn.type = 'button';
+    viewBtn.textContent = '👁️ Xem';
+    viewBtn.dataset.id = doc.id;
+    viewBtn.dataset.filePath = doc.file_path;
+    viewBtn.dataset.filename = doc.filename;
+    actions.appendChild(viewBtn);
+    
+    card.appendChild(title);
+    card.appendChild(owner);
+    card.appendChild(desc);
+    card.appendChild(infoRow2);
+    card.appendChild(infoRow3);
+    if (actions.children.length > 0) {
+        card.appendChild(actions);
+    }
+    
+    // Add click handler to title for opening file
+    title.addEventListener('click', () => {
+        openDocumentFile(doc.id, doc.file_path, doc.filename, token);
+    });
+    
+    return card;
+}
+
+function addPublicDocButtonListeners(container, token) {
+    container.addEventListener('click', async (e) => {
+        // Handle favorite button
+        const favBtn = e.target.closest('.btn-favorite');
+        if (favBtn) {
+            const docId = favBtn.dataset.id;
+            const canFav = favBtn.dataset.canFav;
+            
+            if (canFav === 'false') {
+                alert("Vui lòng đăng nhập để yêu thích tài liệu.");
+                return;
+            }
+            
+            if (!token) {
+                alert("Vui lòng đăng nhập để yêu thích tài liệu.");
+                return;
+            }
+            
+            try {
+                await toggleFavorite(docId);
+                if (favBtn.classList.contains('favorited')) {
+                    favBtn.classList.remove('favorited');
+                    favBtn.textContent = '🤍 Yêu thích';
+                } else {
+                    favBtn.classList.add('favorited');
+                    favBtn.textContent = '❤️ Đã yêu thích';
+                }
+            } catch (err) {
+                console.error("Lỗi:", err);
+                alert("Lỗi: " + err.message);
+            }
+            return;
+        }
+        
+        // Handle view button
+        const viewBtn = e.target.closest('.btn-edit[data-file-path]');
+        if (viewBtn) {
+            const docId = viewBtn.dataset.id;
+            const filePath = viewBtn.dataset.filePath;
+            const filename = viewBtn.dataset.filename;
+            openDocumentFile(docId, filePath, filename, token);
+        }
+    });
+}
+
+
+function escapeHTML(str) {
+    if (!str) return '';
+    return String(str).replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+// Function to open/view document file
+async function openDocumentFile(docId, filePath, filename, token) {
+    if (!filePath) {
+        alert("Không tìm thấy đường dẫn file.");
+        return;
+    }
+    
+    try {
+        // Log view history if user is logged in
+        if (token && typeof logViewHistory === 'function') {
+            await logViewHistory(docId);
+            // Refresh recently viewed if it exists
+            const recentViewGrid = document.getElementById("recent-view-grid");
+            if (recentViewGrid) {
+                const viewGridToken = localStorage.getItem("token");
+                if (viewGridToken) {
+                    try {
+                        const response = await fetch(`${window.API_URL}/api/documents/recently-viewed`, {
+                            headers: { 'Authorization': `Bearer ${viewGridToken}` }
+                        });
+                        const data = await response.json();
+                        if (data.documents) {
+                            recentViewGrid.innerHTML = "";
+                            // Show ALL recently viewed files
+                            data.documents.forEach(doc => {
+                                const card = createPublicDocCard(doc, viewGridToken);
+                                recentViewGrid.appendChild(card);
+                            });
+                        }
+                    } catch (e) {
+                        console.warn("Could not refresh recently viewed:", e);
+                    }
+                }
+            }
+        }
+        
+        const fileUrl = `${window.API_URL}/storage/uploads/${filePath}`;
+        const ext = filename.toLowerCase().split('.').pop();
+        
+        // Check if file type can be viewed inline
+        if (ext === 'pdf') {
+            // Show PDF in modal with iframe
+            showFileViewer(filename, fileUrl, 'pdf');
+        } else if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(ext)) {
+            // Show image in modal
+            showFileViewer(filename, fileUrl, 'image');
+        } else {
+            // Download file
+            const link = document.createElement('a');
+            link.href = fileUrl;
+            link.download = filename;
+            link.click();
+        }
+    } catch (error) {
+        console.error("Lỗi mở file:", error);
+        alert("Lỗi mở file. Vui lòng thử lại.");
+    }
+}
+
+function showFileViewer(filename, fileUrl, type) {
+    const modal = document.getElementById('fileViewerModal');
+    const viewerTitle = document.getElementById('viewerTitle');
+    const viewerContainer = document.getElementById('viewerContainer');
+    
+    viewerTitle.textContent = filename;
+    viewerContainer.innerHTML = '';
+    
+    if (type === 'pdf') {
+        const iframe = document.createElement('iframe');
+        iframe.src = fileUrl;
+        iframe.type = 'application/pdf';
+        viewerContainer.appendChild(iframe);
+    } else if (type === 'image') {
+        const img = document.createElement('img');
+        img.src = fileUrl;
+        img.alt = filename;
+        viewerContainer.appendChild(img);
+    }
+    
+    modal.classList.remove('hidden');
+}
+
+function closeFileViewer() {
+    const modal = document.getElementById('fileViewerModal');
+    modal.classList.add('hidden');
+    document.getElementById('viewerContainer').innerHTML = '';
+}
+
+// Close modal when clicking outside
+document.addEventListener('DOMContentLoaded', () => {
+    const modal = document.getElementById('fileViewerModal');
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeFileViewer();
+            }
+        });
+    }
+});
 
