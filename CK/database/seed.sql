@@ -11,12 +11,9 @@ SET FOREIGN_KEY_CHECKS = 1;
 -- ================= USERS =================
 -- tất cả người dùng đăng nhập bằng mật khẩu: 12345
 INSERT INTO users (name, email, password_hash) VALUES
-('Thanh Tâm', 'tam@example.com', '$2b$12$zoNxPi34sn3DjIcAxHPA/OebNLbARQJ6L3yZEDnvzf7G920p5tirC'),
-('Huyền Trâm', 'tram@example.com', '$2b$12$zoNxPi34sn3DjIcAxHPA/OebNLbARQJ6L3yZEDnvzf7G920p5tirC'),
-('Vũ Nguyên', 'vnguyen@example.com', '$2b$12$zoNxPi34sn3DjIcAxHPA/OebNLbARQJ6L3yZEDnvzf7G920p5tirC'),
-('Văn Long', 'long@example.com', '$2b$12$zoNxPi34sn3DjIcAxHPA/OebNLbARQJ6L3yZEDnvzf7G920p5tirC'),
-('Trung Nguyên', 'tnguyen@example.com', '$2b$12$zoNxPi34sn3DjIcAxHPA/OebNLbARQJ6L3yZEDnvzf7G920p5tirC');
-
+('Yến Oanh', 'yenoanh@example.com', '$2b$12$zoNxPi34sn3DjIcAxHPA/OebNLbARQJ6L3yZEDnvzf7G920p5tirC'),
+('Mỹ Hạnh', 'myhanh@example.com', '$2b$12$zoNxPi34sn3DjIcAxHPA/OebNLbARQJ6L3yZEDnvzf7G920p5tirC'),
+('Hiếu Trung', 'hieutrung@example.com', '$2b$12$zoNxPi34sn3DjIcAxHPA/OebNLbARQJ6L3yZEDnvzf7G920p5tirC');
 -- ================= TAGS =================
 INSERT INTO tags (name) VALUES
 ('Cơ sở dữ liệu'),
